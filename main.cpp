@@ -30,6 +30,27 @@ brain Brain;
 
 
 
+// generating and setting random seed
+void initializeRandomSeed(){
+  int systemTime = Brain.Timer.systemHighResolution();
+  double batteryCurrent = Brain.Battery.current();
+  double batteryVoltage = Brain.Battery.voltage(voltageUnits::mV);
+
+  // Combine these values into a single integer
+  int seed = int(batteryVoltage + batteryCurrent * 100) + systemTime;
+
+  // Set the seed
+  srand(seed);
+}
+
+
+
+void vexcodeInit() {
+
+  //Initializing random seed.
+  initializeRandomSeed(); 
+}
+
 
 // Helper to make playing sounds from the V5 in VEXcode easier and
 // keeps the code cleaner by making it clear what is happening.
@@ -63,29 +84,31 @@ using namespace vex;
 
 #pragma region Custom Drive Library
 
+#define INF std::numeric_limits<float>::infinity()
+
 class Drive {
   public:
     motor_group* leftDrive;
     motor_group* rightDrive;
     directionType leftDirection = forward;
     directionType rightDirection = reverse;
-    inertial* gyroscope;
+    inertial* inertialSensor;
     
     controller* remoteControl;
 
-  Drive(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_gyroscope, controller &_remoteControl) {
+  Drive(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, controller &_remoteControl) {
     leftDrive = &_leftDrive;
     rightDrive = &_rightDrive;
-    gyroscope = &_gyroscope;
+    inertialSensor = &_inertialSensor;
     remoteControl = &_remoteControl;
   }
 
-  Drive(motor_group &_leftDrive, motor_group &_rightDrive, directionType _leftDirection, directionType _rightDirection, inertial &_gyroscope, controller &_remoteControl) {
+  Drive(motor_group &_leftDrive, motor_group &_rightDrive, directionType _leftDirection, directionType _rightDirection, inertial &_inertialSensor, controller &_remoteControl) {
     leftDrive = &_leftDrive;
     rightDrive = &_rightDrive;
     leftDirection = _leftDirection;
     rightDirection = _rightDirection;
-    gyroscope = &_gyroscope;
+    inertialSensor = &_inertialSensor;
     remoteControl = &_remoteControl;
   }
 
@@ -110,29 +133,47 @@ struct coordinate {
 class Odometry {
   private:
     float resetOrientGlobal; // Global orientation at last reset
+    float oldTimestamp;
     float oldLeftAngle;
     float oldRightAngle;
     float oldOrientGlobal;
+    float timestamp;
     float leftAngle;
     float rightAngle;
     float orientGlobal;
+    float slippingEpsilon = 0.01;
 
   public:
     motor_group leftDrive;
     motor_group rightDrive;
-    inertial gyroscope;
+    inertial inertialSensor;
     float distLeft; // Distance from tracking center to left tracking wheel
     float distRight; // Distance from tracking center to right tracking wheel
     float distBack; // Distance from tracking center to back tracking wheel
     coordinate globalPositionPrev; // Previous global position vector
+    float leftWheelRadius;
+    float rightWheelRadius;
 
-    void pollSensorValues() {
+    void initSensorValues() {
+      timestamp = Brain.Timer.time(seconds);
+      leftAngle = leftDrive.position(turns) * 2 * M_PI;
+      rightAngle = rightDrive.position(turns) * 2 * M_PI;
+      orientGlobal = inertialSensor.rotation(turns) * 2 * M_PI;
+      oldTimestamp = timestamp;
       oldLeftAngle = leftAngle;
       oldRightAngle = rightAngle;
       oldOrientGlobal = orientGlobal;
+    }
+
+    void pollSensorValues() {
+      oldTimestamp = timestamp;
+      oldLeftAngle = leftAngle;
+      oldRightAngle = rightAngle;
+      oldOrientGlobal = orientGlobal;
+      timestamp = Brain.Timer.time(seconds);
       leftAngle = leftDrive.position(turns) * 2 * M_PI;
       rightAngle = rightDrive.position(turns) * 2 * M_PI;
-      orientGlobal = gyroscope.rotation(turns) * 2 * M_PI;
+      orientGlobal = inertialSensor.rotation(turns) * 2 * M_PI;
     }
 
     // Getter methods
@@ -149,12 +190,24 @@ class Odometry {
       return orientGlobal;
     }
 
+    float getDeltaTime() {
+      return timestamp - oldTimestamp;
+    }
+
     float getDeltaLeftAngle() {
       return leftAngle - oldLeftAngle;
     }
 
+    float getDeltaLeftDistance() {
+      return getDeltaLeftAngle() * leftWheelRadius;
+    }
+
     float getDeltaRightAngle() {
       return rightAngle - oldRightAngle;
+    }
+
+    float getDeltaRightDistance() {
+      return getDeltaRightAngle() * rightWheelRadius;
     }
 
     float getDeltaOrientation() {
@@ -167,9 +220,39 @@ class Odometry {
       return leftRightAngleDifference / drivetrainWidth;
     }
 
-    /*float getPathArcRadius() {
+    float getPathArcRadius() {
+      if (getDeltaOrientation() == 0) return INF;
+      if (getDeltaLeftAngle() == 0 && getDeltaRightAngle() == 0) return INF;
+      float leftRadius = getDeltaLeftDistance() / getDeltaOrientation() - distLeft;
+      float leftVelocity = leftRadius * getDeltaOrientation() / getDeltaTime();
+      float leftAcceleration = pow(leftVelocity, 2) / leftRadius;
+      float rightRadius = getDeltaRightDistance() / getDeltaOrientation() + distRight;
+      float rightVelocity = rightRadius * getDeltaOrientation() / getDeltaTime();
+      float rightAcceleration = pow(rightVelocity, 2) / rightRadius;
+      
+      float inertialAcceleration = inertialSensor.acceleration(yaxis);
 
-    }*/
+      float minSideRadiusAcceleration = leftAcceleration;
+      float minSideRadiusVelocity = leftVelocity;
+      float minSideRadius = leftRadius;
+      float minSideDeltaAngle = getDeltaLeftDistance();
+      float minSideDist = distLeft;
+
+      if (leftRadius > rightRadius) {
+        minSideRadiusAcceleration = rightAcceleration;
+        minSideRadiusVelocity = rightVelocity;
+        minSideRadius = rightRadius;
+        minSideDeltaAngle = getDeltaRightDistance();
+        minSideDist = distRight;
+      }
+      if (fabs(minSideRadiusAcceleration - inertialAcceleration) > slippingEpsilon) {
+        minSideRadiusAcceleration = inertialAcceleration;
+        minSideRadiusVelocity = sqrt(minSideRadiusAcceleration * minSideRadius);
+        minSideRadius = minSideRadiusVelocity * getDeltaTime() / getDeltaOrientation();
+      }
+
+      return minSideRadius;
+    }
 };
 
 #pragma endregion Custom Drive Library
@@ -186,17 +269,17 @@ motor RightDriveMotorMiddle = motor(PORT2, ratio18_1, true);
 motor RightDriveMotorBack = motor(PORT3, ratio18_1, true);
 motor_group RightDrive = motor_group(RightDriveMotorFront, RightDriveMotorMiddle, RightDriveMotorBack);
 
-inertial Gyroscope = inertial(PORT1);
+inertial InertialSensor = inertial(PORT1);
 
 controller RemoteControl = controller(primary);
 
 /* --------------- Start main program --------------- */
 
 int main() {
-  Drive robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, Gyroscope, RemoteControl);
+  Drive * robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
 
   while (true) {
-    robotDrivetrain.driverControl();
+    robotDrivetrain->driverControl();
     wait(10, msec);
   }
 }
