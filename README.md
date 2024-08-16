@@ -10,7 +10,11 @@ I started working on this after getting my hands dirty trying to port [JAR-templ
 - https://georgegillard.com/resources/documents
 
 ## Installing
-Since this is all designed to fit within the one-file restraint of the VEXcode V5 web editor, installing it is pretty straightforward. Just copy everything in from `/* --- Start drive library --- */` to `/* --- Start robot configuration --- */` into the top of your main project file (after the collapsible section in the web editor). For our project, I've opted to manually configure the motors, controller, etc., but the automatic (GUI) configuration works too.
+**Copying just the library**
+- Since this is all designed to fit within the one-file restraint of the VEXcode V5 web editor, installing it is pretty straightforward. Just copy everything in from `/* --- Start drive library --- */` to `/* --- Start robot configuration --- */` into the top of your main project file (after the collapsible section in the web editor). For our project, I've opted to manually configure the motors, controller, etc., but the automatic (GUI) configuration works too.
+
+**Using the entire project as a template**
+- You can also download the [vexcode project file](<./NAO library.v5cpp>) and upload it to the vexcode web editor. From here, you can modify our main driver control and autonomous code. I highly recommend looking through the library and understanding how it works, in accordance with [this](https://www.robotevents.com/V5RC/2023-2024/QA/1582) official ruling (from 2023-2024, appologies if there is something more recent).
 
 ## Using
 Initialize the drive class with the left and right side motor groups (only tank drive is supported), the directions for the left and right side motor groups (optional, default left forward and right reversed), the inertial sensor and the controller. The code has an example of this in the body of the `main` function, and looking at the constructors in the Drive class itself should be fairly self-explanatory. The inertial sensor isn't optional (this library is designed for my team's use case, and we use an inertial).
