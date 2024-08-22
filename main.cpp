@@ -75,7 +75,7 @@ void playVexcodeSound(const char *soundName) {
 
 // Included libraries (some redundent because of config block)
 #include <math.h>
-#include <vector>
+#include <array>
   
 // Allows for easier use of the VEX Library
 using namespace vex;
@@ -125,9 +125,32 @@ class Drive {
 
 };
 
+using transformMatrix = array<array<float, 2>, 2>;
+
 struct coordinate {
   float x;
   float y;
+
+  coordinate(int x, int y) : x(x), y(y) {
+  }
+
+  coordinate& operator=(const coordinate& a) {
+    x = a.x;
+    y = a.y;
+    return *this;
+  }
+
+  coordinate operator+(const coordinate& a) {
+    return coordinate(a.x + x, a.y + y);
+  }
+
+  bool operator==(const coordinate& a) {
+    return (x == a.x && y == a.y);
+  }
+
+  coordinate& operator*(const transformMatrix& trans) {
+    return coordinate(x * trans[0][0] + y * trans[1][0], x * trans[0][1] + y * trans[1][1]);
+  }
 };
 
 class Odometry {
@@ -137,10 +160,12 @@ class Odometry {
     float oldLeftAngle;
     float oldRightAngle;
     float oldOrientGlobal;
+    coordinate oldGlobalPosition; // Previous global position vector
     float timestamp;
     float leftAngle;
     float rightAngle;
     float orientGlobal;
+    coordinate globalPosition;
     float slippingEpsilon = 0.01;
 
   public:
@@ -150,7 +175,6 @@ class Odometry {
     float distLeft; // Distance from tracking center to left tracking wheel
     float distRight; // Distance from tracking center to right tracking wheel
     float distBack; // Distance from tracking center to back tracking wheel
-    coordinate globalPositionPrev; // Previous global position vector
     float leftWheelRadius;
     float rightWheelRadius;
 
@@ -163,6 +187,7 @@ class Odometry {
       oldLeftAngle = leftAngle;
       oldRightAngle = rightAngle;
       oldOrientGlobal = orientGlobal;
+      resetOrientGlobal = orientGlobal;
     }
 
     void pollSensorValues() {
@@ -174,6 +199,10 @@ class Odometry {
       leftAngle = leftDrive.position(turns) * 2 * M_PI;
       rightAngle = rightDrive.position(turns) * 2 * M_PI;
       orientGlobal = inertialSensor.rotation(turns) * 2 * M_PI;
+
+      // Calculate odometry
+      oldGlobalPosition = globalPosition;
+      globalPosition += getGlobalPositionChange();
     }
 
     // Getter methods
@@ -187,7 +216,19 @@ class Odometry {
     }
 
     float getOrientation() {
-      return orientGlobal;
+      return orientGlobal - resetOrientGlobal;
+    }
+
+    float getOldOrientation() {
+      return oldOrientGlobal;
+    }
+
+    coordinate getOldGlobalPosition() {
+      return oldGlobalPosition;
+    }
+
+    coordinate getGlobalPosition() {
+      return globalPosition;
     }
 
     float getDeltaTime() {
@@ -214,6 +255,10 @@ class Odometry {
       return orientGlobal - oldOrientGlobal;
     }
 
+    coordinate getDeltaGlobalPosition() {
+      return globalPosition - oldGlobalPosition;
+    }
+
     float getPredictedDeltaOrientation() {
       float leftRightAngleDifference = getDeltaLeftAngle() - getDeltaRightAngle();
       float drivetrainWidth = distLeft + distRight;
@@ -238,20 +283,31 @@ class Odometry {
       float minSideDeltaAngle = getDeltaLeftDistance();
       float minSideDist = distLeft;
 
-      if (leftRadius > rightRadius) {
+      if (leftRadius > rightRadius) { // One side slipped more than the other
         minSideRadiusAcceleration = rightAcceleration;
         minSideRadiusVelocity = rightVelocity;
         minSideRadius = rightRadius;
         minSideDeltaAngle = getDeltaRightDistance();
         minSideDist = distRight;
       }
-      if (fabs(minSideRadiusAcceleration - inertialAcceleration) > slippingEpsilon) {
+      if (fabs(minSideRadiusAcceleration - inertialAcceleration) > slippingEpsilon) { // Slippage on both sides
         minSideRadiusAcceleration = inertialAcceleration;
         minSideRadiusVelocity = sqrt(minSideRadiusAcceleration * minSideRadius);
         minSideRadius = minSideRadiusVelocity * getDeltaTime() / getDeltaOrientation();
       }
 
       return minSideRadius;
+    }
+
+    coordinate getGlobalPositionChange() {
+      coordinate localChange = {0, 2 * sin(getDeltaOrientation() / 2) * getPathArcRadius()};
+
+      float localRotationOffset = getOldOrientation() + getDeltaOrientation() / 2;
+
+      transformMatrix rotationMatrix = {{cos(-localRotationOffset), -sin(-localRotationOffset)}, {sin(-localRotationOffset), cos(-localRotationOffset)}};
+
+      coordinate globalChange = localChange * rotationMatrix;
+      return globalChange;
     }
 };
 
