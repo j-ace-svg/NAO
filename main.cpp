@@ -115,11 +115,11 @@ class Drive {
   void driverControl() {
     leftDrive->setVelocity(remoteControl->Axis3.position(), percent);
     if (abs(remoteControl->Axis3.position()) > 3) {
-      leftDrive->spin(forward);
+      leftDrive->spin(leftDirection);
     }
     rightDrive->setVelocity(remoteControl->Axis2.position(), percent);
     if (abs(remoteControl->Axis2.position()) > 3) {
-      rightDrive->spin(reverse);
+      rightDrive->spin(rightDirection);
     }
   }
 
