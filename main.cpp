@@ -316,26 +316,29 @@ class Odometry {
 /* --------------- Start robot configuration --------------- */
 
 motor LeftDriveMotorFront = motor(PORT1, ratio18_1, false);
-motor LeftDriveMotorMiddle = motor(PORT2, ratio18_1, false);
-motor LeftDriveMotorBack = motor(PORT3, ratio18_1, false);
+motor LeftDriveMotorMiddle = motor(PORT11, ratio18_1, false);
+motor LeftDriveMotorBack = motor(PORT12, ratio18_1, false);
 motor_group LeftDrive = motor_group(LeftDriveMotorFront, LeftDriveMotorMiddle, LeftDriveMotorBack);
 
-motor RightDriveMotorFront = motor(PORT1, ratio18_1, true);
-motor RightDriveMotorMiddle = motor(PORT2, ratio18_1, true);
-motor RightDriveMotorBack = motor(PORT3, ratio18_1, true);
+motor RightDriveMotorFront = motor(PORT10, ratio18_1, true);
+motor RightDriveMotorMiddle = motor(PORT19, ratio18_1, true);
+motor RightDriveMotorBack = motor(PORT20, ratio18_1, true);
 motor_group RightDrive = motor_group(RightDriveMotorFront, RightDriveMotorMiddle, RightDriveMotorBack);
 
-inertial InertialSensor = inertial(PORT1);
+inertial InertialSensor = inertial(PORT5);
 
 controller RemoteControl = controller(primary);
 
 /* --------------- Start main program --------------- */
+
+
 
 int main() {
   Drive * robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
 
   while (true) {
     robotDrivetrain->driverControl();
+
     wait(10, msec);
   }
 }
