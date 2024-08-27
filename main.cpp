@@ -131,7 +131,7 @@ struct coordinate {
   float x;
   float y;
 
-  coordinate(int x, int y) : x(x), y(y) {
+  coordinate(float x, float y) : x(x), y(y) {
   }
 
   coordinate& operator=(const coordinate& a) {
@@ -144,11 +144,15 @@ struct coordinate {
     return coordinate(a.x + x, a.y + y);
   }
 
+  coordinate operator-(const coordinate& a) {
+    return coordinate(x - a.x, y - a.y);
+  }
+
   bool operator==(const coordinate& a) {
     return (x == a.x && y == a.y);
   }
 
-  coordinate& operator*(const transformMatrix& trans) {
+  coordinate operator*(const transformMatrix& trans) {
     return coordinate(x * trans[0][0] + y * trans[1][0], x * trans[0][1] + y * trans[1][1]);
   }
 };
@@ -202,7 +206,7 @@ class Odometry {
 
       // Calculate odometry
       oldGlobalPosition = globalPosition;
-      globalPosition += getGlobalPositionChange();
+      globalPosition = globalPosition + getGlobalPositionChange();
     }
 
     // Getter methods
@@ -304,7 +308,7 @@ class Odometry {
 
       float localRotationOffset = getOldOrientation() + getDeltaOrientation() / 2;
 
-      transformMatrix rotationMatrix = {{cos(-localRotationOffset), -sin(-localRotationOffset)}, {sin(-localRotationOffset), cos(-localRotationOffset)}};
+      transformMatrix rotationMatrix = {{cosf(-localRotationOffset), -sinf(-localRotationOffset)}, {sinf(-localRotationOffset), cosf(-localRotationOffset)}};
 
       coordinate globalChange = localChange * rotationMatrix;
       return globalChange;
