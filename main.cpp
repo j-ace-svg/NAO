@@ -315,14 +315,14 @@ class Odometry {
 
 /* --------------- Start robot configuration --------------- */
 
-motor LeftDriveMotorFront = motor(PORT1, ratio18_1, false);
-motor LeftDriveMotorMiddle = motor(PORT11, ratio18_1, false);
-motor LeftDriveMotorBack = motor(PORT12, ratio18_1, false);
+motor LeftDriveMotorFront = motor(PORT1, ratio6_1, false);
+motor LeftDriveMotorMiddle = motor(PORT11, ratio6_1, false);
+motor LeftDriveMotorBack = motor(PORT12, ratio6_1, false);
 motor_group LeftDrive = motor_group(LeftDriveMotorFront, LeftDriveMotorMiddle, LeftDriveMotorBack);
 
-motor RightDriveMotorFront = motor(PORT10, ratio18_1, true);
-motor RightDriveMotorMiddle = motor(PORT19, ratio18_1, true);
-motor RightDriveMotorBack = motor(PORT20, ratio18_1, true);
+motor RightDriveMotorFront = motor(PORT10, ratio6_1, true);
+motor RightDriveMotorMiddle = motor(PORT19, ratio6_1, true);
+motor RightDriveMotorBack = motor(PORT20, ratio6_1, true);
 motor_group RightDrive = motor_group(RightDriveMotorFront, RightDriveMotorMiddle, RightDriveMotorBack);
 
 inertial InertialSensor = inertial(PORT5);
