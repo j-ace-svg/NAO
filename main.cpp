@@ -76,6 +76,7 @@ void playVexcodeSound(const char *soundName) {
 // Included libraries (some redundent because of config block)
 #include <math.h>
 #include <array>
+using std::array
   
 // Allows for easier use of the VEX Library
 using namespace vex;
@@ -304,11 +305,12 @@ class Odometry {
     }
 
     coordinate getGlobalPositionChange() {
-      coordinate localChange = {0, 2 * sin(getDeltaOrientation() / 2) * getPathArcRadius()};
+      coordinate localChange = {0, 2 * sinf(getDeltaOrientation() / 2) * getPathArcRadius()};
 
       float localRotationOffset = getOldOrientation() + getDeltaOrientation() / 2;
 
-      transformMatrix rotationMatrix = {{cosf(-localRotationOffset), -sinf(-localRotationOffset)}, {sinf(-localRotationOffset), cosf(-localRotationOffset)}};
+      // The extra pair of curly braces around the initializer in the line below is actually necessary (because c funkiness)
+      transformMatrix rotationMatrix = {{{cosf(-localRotationOffset), -sinf(-localRotationOffset)}, {sinf(-localRotationOffset), cosf(-localRotationOffset)}}};
 
       coordinate globalChange = localChange * rotationMatrix;
       return globalChange;
