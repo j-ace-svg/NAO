@@ -76,7 +76,7 @@ void playVexcodeSound(const char *soundName) {
 // Included libraries (some redundent because of config block)
 #include <math.h>
 #include <array>
-using std::array
+using std::array;
   
 // Allows for easier use of the VEX Library
 using namespace vex;
