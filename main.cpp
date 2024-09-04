@@ -87,45 +87,6 @@ using namespace vex;
 
 #define INF std::numeric_limits<float>::infinity()
 
-class Drive {
-  public:
-    motor_group* leftDrive;
-    motor_group* rightDrive;
-    directionType leftDirection = forward;
-    directionType rightDirection = reverse;
-    inertial* inertialSensor;
-    
-    controller* remoteControl;
-
-  Drive(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, controller &_remoteControl) {
-    leftDrive = &_leftDrive;
-    rightDrive = &_rightDrive;
-    inertialSensor = &_inertialSensor;
-    remoteControl = &_remoteControl;
-  }
-
-  Drive(motor_group &_leftDrive, motor_group &_rightDrive, directionType _leftDirection, directionType _rightDirection, inertial &_inertialSensor, controller &_remoteControl) {
-    leftDrive = &_leftDrive;
-    rightDrive = &_rightDrive;
-    leftDirection = _leftDirection;
-    rightDirection = _rightDirection;
-    inertialSensor = &_inertialSensor;
-    remoteControl = &_remoteControl;
-  }
-
-  void driverControl() {
-    leftDrive->setVelocity(remoteControl->Axis3.position(), percent);
-    if (abs(remoteControl->Axis3.position()) > 3) {
-      leftDrive->spin(leftDirection);
-    }
-    rightDrive->setVelocity(remoteControl->Axis2.position(), percent);
-    if (abs(remoteControl->Axis2.position()) > 3) {
-      rightDrive->spin(rightDirection);
-    }
-  }
-
-};
-
 using transformMatrix = array<array<float, 2>, 2>;
 
 struct coordinate {
@@ -165,34 +126,46 @@ class Odometry {
     float oldLeftAngle;
     float oldRightAngle;
     float oldOrientGlobal;
-    coordinate oldGlobalPosition; // Previous global position vector
+    coordinate oldGlobalPosition = {0, 0}; // Previous global position vector
     float timestamp;
     float leftAngle;
     float rightAngle;
     float orientGlobal;
-    coordinate globalPosition;
+    coordinate globalPosition = {0, 0};
     float slippingEpsilon = 0.01;
 
   public:
-    motor_group leftDrive;
-    motor_group rightDrive;
-    inertial inertialSensor;
+    motor_group* leftDrive;
+    motor_group* rightDrive;
+    inertial* inertialSensor;
     float distLeft; // Distance from tracking center to left tracking wheel
     float distRight; // Distance from tracking center to right tracking wheel
     float distBack; // Distance from tracking center to back tracking wheel
     float leftWheelRadius;
     float rightWheelRadius;
 
+    Odometry(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, float _distLeft, float _distRight, float _distBack, float _leftWheelRadius, float _rightWheelRadius) {
+      leftDrive = &_leftDrive;
+      rightDrive = &_rightDrive;
+      inertialSensor = &_inertialSensor;
+      distLeft = _distLeft;
+      distRight = _distRight;
+      leftWheelRadius = _leftWheelRadius;
+      rightWheelRadius = _rightWheelRadius;
+    }
+
     void initSensorValues() {
       timestamp = Brain.Timer.time(seconds);
-      leftAngle = leftDrive.position(turns) * 2 * M_PI;
-      rightAngle = rightDrive.position(turns) * 2 * M_PI;
-      orientGlobal = inertialSensor.rotation(turns) * 2 * M_PI;
+      leftAngle = leftDrive->position(turns) * 2 * M_PI;
+      rightAngle = rightDrive->position(turns) * 2 * M_PI;
+      orientGlobal = inertialSensor->rotation(turns) * 2 * M_PI;
+      globalPosition = {0, 0};
       oldTimestamp = timestamp;
       oldLeftAngle = leftAngle;
       oldRightAngle = rightAngle;
       oldOrientGlobal = orientGlobal;
       resetOrientGlobal = orientGlobal;
+      oldGlobalPosition = globalPosition;
     }
 
     void pollSensorValues() {
@@ -201,9 +174,9 @@ class Odometry {
       oldRightAngle = rightAngle;
       oldOrientGlobal = orientGlobal;
       timestamp = Brain.Timer.time(seconds);
-      leftAngle = leftDrive.position(turns) * 2 * M_PI;
-      rightAngle = rightDrive.position(turns) * 2 * M_PI;
-      orientGlobal = inertialSensor.rotation(turns) * 2 * M_PI;
+      leftAngle = leftDrive->position(turns) * 2 * M_PI;
+      rightAngle = rightDrive->position(turns) * 2 * M_PI;
+      orientGlobal = inertialSensor->rotation(turns) * 2 * M_PI;
 
       // Calculate odometry
       oldGlobalPosition = globalPosition;
@@ -280,7 +253,7 @@ class Odometry {
       float rightVelocity = rightRadius * getDeltaOrientation() / getDeltaTime();
       float rightAcceleration = pow(rightVelocity, 2) / rightRadius;
       
-      float inertialAcceleration = inertialSensor.acceleration(yaxis);
+      float inertialAcceleration = inertialSensor->acceleration(yaxis);
 
       float minSideRadiusAcceleration = leftAcceleration;
       float minSideRadiusVelocity = leftVelocity;
@@ -317,34 +290,108 @@ class Odometry {
     }
 };
 
+class Drive {
+  public:
+    motor_group* leftDrive;
+    motor_group* rightDrive;
+    directionType leftDirection = forward;
+    directionType rightDirection = reverse;
+    inertial* inertialSensor;
+    
+    controller* remoteControl;
+
+    Odometry* odom;
+
+  Drive(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, controller &_remoteControl) {
+    leftDrive = &_leftDrive;
+    rightDrive = &_rightDrive;
+    inertialSensor = &_inertialSensor;
+    remoteControl = &_remoteControl;
+  }
+
+  Drive(motor_group &_leftDrive, motor_group &_rightDrive, directionType _leftDirection, directionType _rightDirection, inertial &_inertialSensor, controller &_remoteControl) {
+    leftDrive = &_leftDrive;
+    rightDrive = &_rightDrive;
+    leftDirection = _leftDirection;
+    rightDirection = _rightDirection;
+    inertialSensor = &_inertialSensor;
+    remoteControl = &_remoteControl;
+  }
+
+  void initOdom(float distLeft, float distRight, float distBack, float leftWheelRadius, float rightWheelRadius) {
+    odom = new Odometry(leftDrive, rightDrive, inertialSensor, distLeft, distRight, distBack, leftWheelRadius, rightWheelRadius);
+    odom->initSensorValues();
+  }
+
+  void driverControl() {
+    leftDrive->setVelocity(remoteControl->Axis3.position(), percent);
+    if (abs(remoteControl->Axis3.position()) > 3) {
+      leftDrive->spin(leftDirection);
+    }
+    rightDrive->setVelocity(remoteControl->Axis2.position(), percent);
+    if (abs(remoteControl->Axis2.position()) > 3) {
+      rightDrive->spin(rightDirection);
+    }
+  }
+
+};
+
 #pragma endregion Custom Drive Library
 
 /* --------------- Start robot configuration --------------- */
 
 motor LeftDriveMotorFront = motor(PORT1, ratio6_1, false);
-motor LeftDriveMotorMiddle = motor(PORT11, ratio6_1, false);
-motor LeftDriveMotorBack = motor(PORT12, ratio6_1, false);
+motor LeftDriveMotorMiddle = motor(PORT2, ratio6_1, false);
+motor LeftDriveMotorBack = motor(PORT3, ratio6_1, false);
 motor_group LeftDrive = motor_group(LeftDriveMotorFront, LeftDriveMotorMiddle, LeftDriveMotorBack);
 
-motor RightDriveMotorFront = motor(PORT10, ratio6_1, true);
-motor RightDriveMotorMiddle = motor(PORT19, ratio6_1, true);
-motor RightDriveMotorBack = motor(PORT20, ratio6_1, true);
+motor RightDriveMotorFront = motor(PORT4, ratio6_1, true);
+motor RightDriveMotorMiddle = motor(PORT5, ratio6_1, true);
+motor RightDriveMotorBack = motor(PORT6, ratio6_1, true);
 motor_group RightDrive = motor_group(RightDriveMotorFront, RightDriveMotorMiddle, RightDriveMotorBack);
 
-inertial InertialSensor = inertial(PORT5);
+inertial InertialSensor = inertial(PORT7);
 
 controller RemoteControl = controller(primary);
+
+/* --------------- Start autons --------------- */
+
+void odomDebugAuton(Drive* robotDrivetrain) {
+  while (true) {
+    robotDrivetrain->odom->pollSensorValues();
+    Brain.Screen.clearScreen();
+    coordinate globalPosition = robotDrivetrain->odom->getGlobalPosition();
+    float xCoordinate = globalPosition.x;
+    float yCoordinate = globalPosition.y;
+    float robotOrientation = robotDrivetrain->odom->getOrientation();
+    Brain.Screen.print("X coordinate: %f", xCoordinate);
+    Brain.Screen.newLine();
+    Brain.Screen.print("Y coordinate: %f", yCoordinate);
+    Brain.Screen.newLine();
+    Brain.Screen.print("Orientation: %f", robotOrientation);
+
+
+
+    wait(10, msec);
+  }
+}
+
+/* --------------- Start driver control ---------------*/
+
+void driverControl(Drive* robotDrivetrain) {
+  while (true) {
+    robotDrivetrain->driverControl();
+
+    wait(10, msec);
+  }
+}
 
 /* --------------- Start main program --------------- */
 
 
 
 int main() {
-  Drive * robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
+  Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
 
-  while (true) {
-    robotDrivetrain->driverControl();
-
-    wait(10, msec);
-  }
+  odomDebugAuton(robotDrivetrain);
 }
