@@ -319,7 +319,7 @@ class Drive {
   }
 
   void initOdom(float distLeft, float distRight, float distBack, float leftWheelRadius, float rightWheelRadius) {
-    odom = new Odometry(leftDrive, rightDrive, inertialSensor, distLeft, distRight, distBack, leftWheelRadius, rightWheelRadius);
+    odom = new Odometry(*leftDrive, *rightDrive, *inertialSensor, distLeft, distRight, distBack, leftWheelRadius, rightWheelRadius);
     odom->initSensorValues();
   }
 
