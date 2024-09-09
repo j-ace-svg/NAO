@@ -340,35 +340,44 @@ class Drive {
 
 /* --------------- Start robot configuration --------------- */
 
-motor LeftDriveMotorFront = motor(PORT1, ratio6_1, false);
-motor LeftDriveMotorMiddle = motor(PORT2, ratio6_1, false);
-motor LeftDriveMotorBack = motor(PORT3, ratio6_1, false);
+// Drivetrain
+motor LeftDriveMotorFront = motor(PORT1, ratio6_1, true);
+motor LeftDriveMotorMiddle = motor(PORT2, ratio6_1, true);
+motor LeftDriveMotorBack = motor(PORT3, ratio6_1, true);
 motor_group LeftDrive = motor_group(LeftDriveMotorFront, LeftDriveMotorMiddle, LeftDriveMotorBack);
 
-motor RightDriveMotorFront = motor(PORT4, ratio6_1, true);
-motor RightDriveMotorMiddle = motor(PORT5, ratio6_1, true);
-motor RightDriveMotorBack = motor(PORT6, ratio6_1, true);
+motor RightDriveMotorFront = motor(PORT4, ratio6_1, false);
+motor RightDriveMotorMiddle = motor(PORT5, ratio6_1, false);
+motor RightDriveMotorBack = motor(PORT6, ratio6_1, false);
 motor_group RightDrive = motor_group(RightDriveMotorFront, RightDriveMotorMiddle, RightDriveMotorBack);
 
 inertial InertialSensor = inertial(PORT7);
+
+// Intake
+motor IntakeMotor = motor(PORT10, ratio36_1, false);
+
+// MoGo Mech
+digital_out LeftMoGoPneumatic = digital_out(Brain.ThreeWirePort.G);
+digital_out RightMoGoPneumatic = digital_out(Brain.ThreeWirePort.H);
 
 controller RemoteControl = controller(primary);
 
 /* --------------- Start autons --------------- */
 
-void odomDebugAuton(Drive* robotDrivetrain) {
+void odomDebugAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   while (true) {
     robotDrivetrain->odom->pollSensorValues();
     Brain.Screen.clearScreen();
+    Brain.Screen.setCursor(1, 1);
     coordinate globalPosition = robotDrivetrain->odom->getGlobalPosition();
     float xCoordinate = globalPosition.x;
     float yCoordinate = globalPosition.y;
     float robotOrientation = robotDrivetrain->odom->getOrientation();
-    Brain.Screen.print("X coordinate: %f", xCoordinate);
+    Brain.Screen.print("X coordinate: %f\n", xCoordinate);
     Brain.Screen.newLine();
-    Brain.Screen.print("Y coordinate: %f", yCoordinate);
+    Brain.Screen.print("Y coordinate: %f\n", yCoordinate);
     Brain.Screen.newLine();
-    Brain.Screen.print("Orientation: %f", robotOrientation);
+    Brain.Screen.print("Orientation: %f\n", robotOrientation);
 
 
 
@@ -378,9 +387,32 @@ void odomDebugAuton(Drive* robotDrivetrain) {
 
 /* --------------- Start driver control ---------------*/
 
-void driverControl(Drive* robotDrivetrain) {
+void driverControl(Drive* robotDrivetrain, motor &intakeMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   while (true) {
     robotDrivetrain->driverControl();
+
+    // Intake
+    bool r1 = robotDrivetrain->remoteControl->ButtonR1.pressing();
+    bool r2 = robotDrivetrain->remoteControl->ButtonR2.pressing();
+    
+    int spinDirection = r2 - r1;
+
+    intakeMotor.setVelocity(100 * (float) spinDirection, percent);
+    intakeMotor.spin(forward);
+
+    // MoGo Mech
+    bool l1 = robotDrivetrain->remoteControl->ButtonL1.pressing();
+    bool l2 = robotDrivetrain->remoteControl->ButtonL2.pressing();
+    
+    int mogoState = l2 - l1;
+
+    if (mogoState == 1) {
+      leftMoGoPneumatic.set(true);
+      rightMoGoPneumatic.set(true);
+    } else if (mogoState == -1) {
+      leftMoGoPneumatic.set(false);
+      rightMoGoPneumatic.set(false);
+    }
 
     wait(10, msec);
   }
@@ -392,6 +424,7 @@ void driverControl(Drive* robotDrivetrain) {
 
 int main() {
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
+  robotDrivetrain->initOdom(7.5, 7.5, 0, 1.625, 1.625);
 
-  odomDebugAuton(robotDrivetrain);
+  driverControl(robotDrivetrain, IntakeMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
