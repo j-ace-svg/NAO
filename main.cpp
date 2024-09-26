@@ -122,6 +122,7 @@ struct coordinate {
 class Odometry {
   private:
     float resetOrientGlobal; // Global orientation at last reset
+    //float orientGlobalDrift;
     float oldTimestamp;
     float oldLeftAngle;
     float oldRightAngle;
@@ -138,16 +139,19 @@ class Odometry {
     motor_group* leftDrive;
     motor_group* rightDrive;
     inertial* inertialSensor;
+    float orientGlobalDrift;
+    float inertialDriftEpsilon; // Minimum threshold used to determine whether or not turning is drift
     float distLeft; // Distance from tracking center to left tracking wheel
     float distRight; // Distance from tracking center to right tracking wheel
     float distBack; // Distance from tracking center to back tracking wheel
     float leftWheelRadius;
     float rightWheelRadius;
 
-    Odometry(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, float _distLeft, float _distRight, float _distBack, float _leftWheelRadius, float _rightWheelRadius) {
+    Odometry(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, float _inertialDriftEpsilon, float _distLeft, float _distRight, float _distBack, float _leftWheelRadius, float _rightWheelRadius) {
       leftDrive = &_leftDrive;
       rightDrive = &_rightDrive;
       inertialSensor = &_inertialSensor;
+      inertialDriftEpsilon = _inertialDriftEpsilon;
       distLeft = _distLeft;
       distRight = _distRight;
       leftWheelRadius = _leftWheelRadius;
@@ -159,6 +163,7 @@ class Odometry {
       leftAngle = leftDrive->position(turns) * 2 * M_PI;
       rightAngle = rightDrive->position(turns) * 2 * M_PI;
       orientGlobal = inertialSensor->rotation(turns) * 2 * M_PI;
+      orientGlobalDrift = 0;
       globalPosition = {0, 0};
       oldTimestamp = timestamp;
       oldLeftAngle = leftAngle;
@@ -178,6 +183,10 @@ class Odometry {
       rightAngle = rightDrive->position(turns) * 2 * M_PI;
       orientGlobal = inertialSensor->rotation(turns) * 2 * M_PI;
 
+      if (fabs(orientGlobal - oldOrientGlobal) < inertialDriftEpsilon) {
+        orientGlobalDrift += orientGlobal - oldOrientGlobal;
+      }
+
       // Calculate odometry
       oldGlobalPosition = globalPosition;
       globalPosition = globalPosition + getGlobalPositionChange();
@@ -194,7 +203,7 @@ class Odometry {
     }
 
     float getOrientation() {
-      return orientGlobal - resetOrientGlobal;
+      return orientGlobal - resetOrientGlobal - orientGlobalDrift;
     }
 
     float getOldOrientation() {
@@ -318,8 +327,8 @@ class Drive {
     remoteControl = &_remoteControl;
   }
 
-  void initOdom(float distLeft, float distRight, float distBack, float leftWheelRadius, float rightWheelRadius) {
-    odom = new Odometry(*leftDrive, *rightDrive, *inertialSensor, distLeft, distRight, distBack, leftWheelRadius, rightWheelRadius);
+  void initOdom(float inertialDriftEpsilon, float distLeft, float distRight, float distBack, float leftWheelRadius, float rightWheelRadius) {
+    odom = new Odometry(*leftDrive, *rightDrive, *inertialSensor, inertialDriftEpsilon, distLeft, distRight, distBack, leftWheelRadius, rightWheelRadius);
     odom->initSensorValues();
   }
 
@@ -372,12 +381,24 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &lef
     coordinate globalPosition = robotDrivetrain->odom->getGlobalPosition();
     float xCoordinate = globalPosition.x;
     float yCoordinate = globalPosition.y;
+    float leftRotation = robotDrivetrain->odom->getDeltaLeftAngle();
+    float rightRotation = robotDrivetrain->odom->getDeltaRightAngle();
     float robotOrientation = robotDrivetrain->odom->getOrientation();
+    float deltaOrientation = fabs(robotDrivetrain->odom->getDeltaOrientation());
+    float robotOrientationDrift = robotDrivetrain->odom->orientGlobalDrift;
     Brain.Screen.print("X coordinate: %f\n", xCoordinate);
     Brain.Screen.newLine();
     Brain.Screen.print("Y coordinate: %f\n", yCoordinate);
     Brain.Screen.newLine();
+    Brain.Screen.print("Left rotation: %f\n", leftRotation);
+    Brain.Screen.newLine();
+    Brain.Screen.print("Right rotation: %f\n", rightRotation);
+    Brain.Screen.newLine();
     Brain.Screen.print("Orientation: %f\n", robotOrientation);
+    Brain.Screen.newLine();
+    Brain.Screen.print("Orientation delta: %f\n", deltaOrientation);
+    Brain.Screen.newLine();
+    Brain.Screen.print("Orientation drift: %f\n", robotOrientationDrift);
 
 
 
@@ -408,10 +429,10 @@ void driverControl(Drive* robotDrivetrain, motor &intakeMotor, digital_out &left
 
     if (mogoState == 1) {
       leftMoGoPneumatic.set(true);
-      rightMoGoPneumatic.set(true);
+      rightMoGoPneumatic.set(false);
     } else if (mogoState == -1) {
       leftMoGoPneumatic.set(false);
-      rightMoGoPneumatic.set(false);
+      rightMoGoPneumatic.set(true);
     }
 
     wait(10, msec);
@@ -424,7 +445,7 @@ void driverControl(Drive* robotDrivetrain, motor &intakeMotor, digital_out &left
 
 int main() {
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
-  robotDrivetrain->initOdom(7.5, 7.5, 0, 1.625, 1.625);
+  robotDrivetrain->initOdom(0.000025, 7.5, 7.5, 0, 1.625, 1.625);
 
   driverControl(robotDrivetrain, IntakeMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
