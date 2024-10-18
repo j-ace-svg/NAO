@@ -86,6 +86,7 @@ using namespace vex;
 #pragma region Custom Drive Library
 
 #define INF std::numeric_limits<float>::infinity()
+#define DT 10
 
 using transformMatrix = array<array<float, 2>, 2>;
 
@@ -198,8 +199,16 @@ class Odometry {
       return leftAngle;
     }
 
+    float getLeftDistance() {
+      return leftAngle * leftWheelRadius;
+    }
+
     float getRightAngle() {
       return rightAngle;
+    }
+
+    float getRightDistance() {
+      return rightAngle * rightWheelRadius;
     }
 
     float getOrientation() {
@@ -320,6 +329,70 @@ class Odometry {
     }
 };
 
+class PID {
+  private:
+    float kp;
+    float ki;
+    float kd;
+    float integralRange;
+    float previousError;
+    float accumulatedError;
+    float timeRunning;
+    float timeout;
+    float settleThreshold;
+    float settleTime;
+    float timeSettled;
+
+  public:
+
+    PID(float startError, float _kp, float _ki, float _kd, float _integralRange) {
+      kp = _kp;
+      ki = _ki;
+      kd = _kd;
+      integralRange = _integralRange;
+      accumulatedError = 0;
+      previousError = startError;
+      timeRunning = 0;
+      timeSettled = 0;
+    }
+
+    bool isSettled() {
+      if ((timeRunning > timeout && timeout != 0) || timeSettled > settleTime) return true;
+      return false;
+    }
+
+    float calculateNextStep(float error) {
+      // Integral
+      accumulatedError = accumulatedError + error;
+      if (fabs(error) > integralRange) accumulatedError = 0; // Error outside of range for accumulating integral
+      if (error == 0 || (error > 0 &&  previousError < 0) || (error < 0 && previousError > 0)) accumulatedError = 0; // Error crossed 0
+
+      // Derivative
+      float deltaError = error - previousError;
+      previousError = error;
+
+      // Output
+      float outputPower = kp * error + ki * accumulatedError + kd * deltaError;
+      if (fabs(error) < settleThreshold) timeSettled += DT;
+      timeRunning += DT;
+      return outputPower;
+    }
+};
+
+struct odomParameters {
+  float kp;
+  float ki;
+  float kd;
+  float integralRange;
+  float settleThreshold;
+  float settleTime;
+  float maxVelocity;
+
+  odomParameters(float kp, float ki, float kd, float integralRange, float settleThreshold, float settleTime, float maxVelocity) : kp(kp), ki(ki), kd(kd), integralRange(integralRange), settleThreshold(settleThreshold), settleTime(settleTime), maxVelocity(maxVelocity) {
+  }
+
+};
+
 class Drive {
   public:
     motor_group* leftDrive;
@@ -331,6 +404,9 @@ class Drive {
     controller* remoteControl;
 
     Odometry* odom;
+    odomParameters straightParameters = {0, 0, 0, 0, 0, 0, 0};
+    odomParameters turnParameters = {0, 0, 0, 0, 0, 0, 0};
+    odomParameters headingParameters = {0, 0, 0, 0, 0, 0, 0};
 
   Drive(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, controller &_remoteControl) {
     leftDrive = &_leftDrive;
@@ -348,9 +424,11 @@ class Drive {
     remoteControl = &_remoteControl;
   }
 
-  void initOdom(float inertialDriftEpsilon, float distLeft, float distRight, float distBack, float leftWheelRadius, float rightWheelRadius) {
+  void initOdom(float inertialDriftEpsilon, float distLeft, float distRight, float distBack, float leftWheelRadius, float rightWheelRadius, odomParameters _straightParameters, odomParameters _turnParameters) {
     odom = new Odometry(*leftDrive, *rightDrive, *inertialSensor, inertialDriftEpsilon, distLeft, distRight, distBack, leftWheelRadius, rightWheelRadius);
     odom->initSensorValues();
+    straightParameters = _straightParameters;
+    turnParameters = _turnParameters;
   }
 
   void driverControl() {
@@ -361,6 +439,47 @@ class Drive {
     rightDrive->setVelocity(remoteControl->Axis2.position(), percent);
     if (abs(remoteControl->Axis2.position()) > 3) {
       rightDrive->spin(rightDirection);
+    }
+  }
+
+  // General drive functions
+  void driveVelocity(float leftMotorPower, float rightMotorPower) {
+    leftDrive->setVelocity(leftMotorPower, percent);
+    leftDrive->spin(leftDirection);
+
+    rightDrive->setVelocity(rightMotorPower, percent);
+    rightDrive->spin(rightDirection);
+  }
+
+  void driveVelocity(float motorPower) {
+    driveVelocity(motorPower, motorPower);
+  }
+
+  float clampStraightVelocity(float motorVelocity) {
+    if (motorVelocity > straightParameters.maxVelocity) {
+      return straightParameters.maxVelocity;
+    } else if (motorVelocity < -straightParameters.maxVelocity) {
+      return -straightParameters.maxVelocity;
+    } else {
+      return motorVelocity;
+    }
+  }
+
+  // Drivetrain autonomous functions
+  void driveDistance(float dist) {
+    PID* drivePID = new PID(dist, straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange);
+    PID* headingPID = new PID(0, headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange);
+    float setPoint = dist + (odom->getLeftDistance() + odom->getRightDistance()) / 2;
+    while (!drivePID->isSettled()) {
+      float distanceError = (odom->getLeftDistance() + odom->getRightDistance()) / 2;
+      float motorVelocity = drivePID->calculateNextStep(distanceError);
+      
+      motorVelocity = clampStraightVelocity(motorVelocity);
+      
+      leftDrive->setVelocity(motorVelocity, percent);
+      rightDrive->setVelocity(motorVelocity, percent);
+
+      wait(DT, msec);
     }
   }
 
@@ -396,6 +515,16 @@ digital_out RightMoGoPneumatic = digital_out(Brain.ThreeWirePort.H);
 
 controller RemoteControl = controller(primary);
 
+// Odometry
+float InertialDriftEpsilon = 0.000025;
+float DistLeft = 7.5;
+float DistRight = 7.5;
+float DistBack = 0;
+float LeftWheelRadius = 1.625;
+float RightWheelRadius = 1.625;
+odomParameters StraightParameters = {0, 0, 0, 0, 0, 0, 0};
+odomParameters TurnParameters = {0, 0, 0, 0, 0, 0, 0};
+
 /* --------------- Start autons --------------- */
 
 void odomDebugAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
@@ -428,7 +557,7 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &int
 
 
 
-    wait(10, msec);
+    wait(DT, msec);
   }
 }
 
@@ -483,7 +612,7 @@ void driverControl(Drive* robotDrivetrain, motor &intakeMotor, digital_out &inta
       rightMoGoPneumatic.set(false);
     }
 
-    wait(10, msec);
+    wait(DT, msec);
   }
 }
 
@@ -493,7 +622,7 @@ void driverControl(Drive* robotDrivetrain, motor &intakeMotor, digital_out &inta
 
 int main() {
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
-  robotDrivetrain->initOdom(0.000025, 7.5, 7.5, 0, 1.625, 1.625);
+  robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters);
 
   odomDebugAuton(robotDrivetrain, IntakeMotor, IntakePneumatic, ArmMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
