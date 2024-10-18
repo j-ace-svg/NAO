@@ -499,10 +499,10 @@ class Drive {
 
   // Drivetrain autonomous functions
   void driveDistance(float dist) {
-    PID* drivePID = new PID(dist, straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange);
     float driveSetPoint = dist + (odom->getLeftDistance() + odom->getRightDistance()) / 2;
-    PID* headingPID = new PID(0, headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange);
+    PID* drivePID = new PID(dist, straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange);
     float headingSetPoint = odom->getOrientation();
+    PID* headingPID = new PID(0, headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange);
     while (!drivePID->isSettled()) {
       float distanceError = driveSetPoint - (odom->getLeftDistance() + odom->getRightDistance()) / 2;
       float driveMotorVelocity = drivePID->calculateNextStep(distanceError);
@@ -515,6 +515,22 @@ class Drive {
       headingMotorVelocity = clampHeadingVelocity(headingMotorVelocity);
       
       driveVelocity(driveMotorVelocity + headingMotorVelocity, driveMotorVelocity - headingMotorVelocity);
+
+      wait(DT, msec);
+    }
+  }
+
+  // Drivetrain autonomous functions
+  void turnToAngle(float targetAngle) {
+    float headingSetPoint = targetAngle;
+    PID* headingPID = new PID(headingSetPoint - odom->getOrientation, headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange);
+    while (!headingPID->isSettled()) {
+      float headingError = reduceHeadingNegPiToPi(headingSetPoint - odom->getOrientation());
+      float headingMotorVelocity = headingPID->calculateNextStep(headingError);
+
+      headingMotorVelocity = clampHeadingVelocity(headingMotorVelocity);
+      
+      driveVelocity(headingMotorVelocity, headingMotorVelocity);
 
       wait(DT, msec);
     }
