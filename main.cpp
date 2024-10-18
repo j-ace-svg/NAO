@@ -528,7 +528,7 @@ class Drive {
   // Drivetrain autonomous functions
   void turnToAngle(float targetAngle) {
     float headingSetPoint = targetAngle;
-    PID* headingPID = new PID(headingSetPoint - odom->getOrientation, headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange);
+    PID* headingPID = new PID(headingSetPoint - odom->getOrientation(), headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange);
     while (!headingPID->isSettled()) {
       float headingError = reduceHeadingNegPiToPi(headingSetPoint - odom->getOrientation());
       float headingMotorVelocity = headingPID->calculateNextStep(headingError);
