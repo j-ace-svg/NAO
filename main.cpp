@@ -465,6 +465,16 @@ class Drive {
     }
   }
 
+  float clampTurnVelocity(float motorVelocity) {
+    if (motorVelocity > turnParameters.maxVelocity) {
+      return turnParameters.maxVelocity;
+    } else if (motorVelocity < -turnParameters.maxVelocity) {
+      return -turnParameters.maxVelocity;
+    } else {
+      return motorVelocity;
+    }
+  }
+
   float clampHeadingVelocity(float motorVelocity) {
     if (motorVelocity > headingParameters.maxVelocity) {
       return headingParameters.maxVelocity;
