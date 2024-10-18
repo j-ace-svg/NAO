@@ -465,19 +465,46 @@ class Drive {
     }
   }
 
+  float clampHeadingVelocity(float motorVelocity) {
+    if (motorVelocity > headingParameters.maxVelocity) {
+      return headingParameters.maxVelocity;
+    } else if (motorVelocity < -headingParameters.maxVelocity) {
+      return -headingParameters.maxVelocity;
+    } else {
+      return motorVelocity;
+    }
+  }
+
+  float reduceHeadingNegPiToPi(float headingAngle) { // Inspired by a pretty convenient utility function by Jackson Area Robotics
+    // Not using modulo because negative inputs are implementation dependent...
+    while (headingAngle > M_PI || headingAngle <= -M_PI) {
+      if (headingAngle > M_PI) {
+        headingAngle -= 2 * M_PI;
+      } else {
+        headingAngle += 2 * M_PI;
+      }
+    }
+    return headingAngle;
+  }
+
   // Drivetrain autonomous functions
   void driveDistance(float dist) {
     PID* drivePID = new PID(dist, straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange);
+    float driveSetPoint = dist + (odom->getLeftDistance() + odom->getRightDistance()) / 2;
     PID* headingPID = new PID(0, headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange);
-    float setPoint = dist + (odom->getLeftDistance() + odom->getRightDistance()) / 2;
+    float headingSetPoint = odom->getOrientation();
     while (!drivePID->isSettled()) {
-      float distanceError = (odom->getLeftDistance() + odom->getRightDistance()) / 2;
-      float motorVelocity = drivePID->calculateNextStep(distanceError);
+      float distanceError = driveSetPoint - (odom->getLeftDistance() + odom->getRightDistance()) / 2;
+      float driveMotorVelocity = drivePID->calculateNextStep(distanceError);
       
-      motorVelocity = clampStraightVelocity(motorVelocity);
+      driveMotorVelocity = clampStraightVelocity(driveMotorVelocity);
+
+      float headingError = reduceHeadingNegPiToPi(headingSetPoint - odom->getOrientation());
+      float headingMotorVelocity = headingPID->calculateNextStep(headingError);
+
+      headingMotorVelocity = clampHeadingVelocity(headingMotorVelocity);
       
-      leftDrive->setVelocity(motorVelocity, percent);
-      rightDrive->setVelocity(motorVelocity, percent);
+      driveVelocity(driveMotorVelocity + headingMotorVelocity, driveMotorVelocity - headingMotorVelocity);
 
       wait(DT, msec);
     }
