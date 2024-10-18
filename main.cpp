@@ -498,6 +498,11 @@ class Drive {
   }
 
   // Drivetrain autonomous functions
+  void odometryStep() {
+    odom->pollSensorValues();
+    wait(DT, msec);
+  }
+  
   void driveDistance(float dist) {
     float driveSetPoint = dist + (odom->getLeftDistance() + odom->getRightDistance()) / 2;
     PID* drivePID = new PID(dist, straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange);
@@ -516,7 +521,7 @@ class Drive {
       
       driveVelocity(driveMotorVelocity + headingMotorVelocity, driveMotorVelocity - headingMotorVelocity);
 
-      wait(DT, msec);
+      odometryStep();
     }
   }
 
@@ -532,7 +537,7 @@ class Drive {
       
       driveVelocity(headingMotorVelocity, headingMotorVelocity);
 
-      wait(DT, msec);
+      odometryStep();
     }
   }
 
@@ -582,7 +587,6 @@ odomParameters TurnParameters = {0, 0, 0, 0, 0, 0, 0};
 
 void odomDebugAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   while (true) {
-    robotDrivetrain->odom->pollSensorValues();
     Brain.Screen.clearScreen();
     Brain.Screen.setCursor(1, 1);
     coordinate globalPosition = robotDrivetrain->odom->getGlobalPosition();
@@ -610,12 +614,16 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &int
 
 
 
-    wait(DT, msec);
+    robotDrivetrain->odometryStep();
   }
 }
 
 void babysFirstAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
-  
+  /* Demo functions:
+     Drive forward: robotDrivetrain->driveDistance({distance});
+     Turn to angle: robotDrivetrain->turnToAngle({angle});
+     Delay: wait({time}, msec);
+     */
 }
 
 /* --------------- Start driver control ---------------*/
