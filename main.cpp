@@ -424,11 +424,12 @@ class Drive {
     remoteControl = &_remoteControl;
   }
 
-  void initOdom(float inertialDriftEpsilon, float distLeft, float distRight, float distBack, float leftWheelRadius, float rightWheelRadius, odomParameters _straightParameters, odomParameters _turnParameters) {
+  void initOdom(float inertialDriftEpsilon, float distLeft, float distRight, float distBack, float leftWheelRadius, float rightWheelRadius, odomParameters _straightParameters, odomParameters _turnParameters, odomParameters _headingParameters) {
     odom = new Odometry(*leftDrive, *rightDrive, *inertialSensor, inertialDriftEpsilon, distLeft, distRight, distBack, leftWheelRadius, rightWheelRadius);
     odom->initSensorValues();
     straightParameters = _straightParameters;
     turnParameters = _turnParameters;
+    headingParameters = _headingParameters;
   }
 
   void driverControl() {
@@ -582,6 +583,7 @@ float LeftWheelRadius = 1.625;
 float RightWheelRadius = 1.625;
 odomParameters StraightParameters = {0, 0, 0, 0, 0, 0, 0};
 odomParameters TurnParameters = {0, 0, 0, 0, 0, 0, 0};
+odomParameters HeadingParameters = {0, 0, 0, 0, 0, 0, 0};
 
 /* --------------- Start autons --------------- */
 
