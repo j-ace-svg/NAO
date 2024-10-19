@@ -532,6 +532,9 @@ class Drive {
     PID* headingPID = new PID(headingSetPoint - odom->getOrientation(), headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange);
     while (!headingPID->isSettled()) {
       float headingError = reduceHeadingNegPiToPi(headingSetPoint - odom->getOrientation());
+      remoteControl->Screen.clearScreen();
+      remoteControl->Screen.setCursor(1,1);
+      remoteControl->Screen.print("Error: %f", headingError);
       float headingMotorVelocity = headingPID->calculateNextStep(headingError);
 
       headingMotorVelocity = clampHeadingVelocity(headingMotorVelocity);
@@ -581,9 +584,9 @@ float DistRight = 7.5;
 float DistBack = 0;
 float LeftWheelRadius = 1.625;
 float RightWheelRadius = 1.625;
-odomParameters StraightParameters = {0, 0, 0, 0, 0, 0, 0};
-odomParameters TurnParameters = {0, 0, 0, 0, 0, 0, 0};
-odomParameters HeadingParameters = {0, 0, 0, 0, 0, 0, 0};
+odomParameters StraightParameters = {1, 0, 0, 0, 0, 0.5, 100};
+odomParameters TurnParameters = {1, 0, 0, 0, 75, 0.1, 50};
+odomParameters HeadingParameters = {1, 0, 0, 0, 0, 0.1, 100};
 
 /* --------------- Start autons --------------- */
 
