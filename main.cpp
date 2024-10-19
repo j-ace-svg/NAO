@@ -536,7 +536,7 @@ class Drive {
 
       headingMotorVelocity = clampHeadingVelocity(headingMotorVelocity);
       
-      driveVelocity(headingMotorVelocity, headingMotorVelocity);
+      driveVelocity(headingMotorVelocity, -headingMotorVelocity);
 
       odometryStep();
     }
