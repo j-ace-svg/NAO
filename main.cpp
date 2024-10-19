@@ -345,7 +345,7 @@ class PID {
 
   public:
 
-    PID(float startError, float _kp, float _ki, float _kd, float _integralRange) {
+    PID(float startError, float _kp, float _ki, float _kd, float _integralRange, float _settleThreshold, float _settleTime) {
       kp = _kp;
       ki = _ki;
       kd = _kd;
@@ -486,7 +486,7 @@ class Drive {
     }
   }
 
-  float reduceHeadingNegPiToPi(float headingAngle) { // Inspired by a pretty convenient utility function by Jackson Area Robotics
+  float reduceAngleNegPiToPi(float headingAngle) { // Inspired by a pretty convenient utility function by Jackson Area Robotics
     // Not using modulo because negative inputs are implementation dependent...
     while (headingAngle > M_PI || headingAngle <= -M_PI) {
       if (headingAngle > M_PI) {
@@ -506,16 +506,16 @@ class Drive {
   
   void driveDistance(float dist) {
     float driveSetPoint = dist + (odom->getLeftDistance() + odom->getRightDistance()) / 2;
-    PID* drivePID = new PID(dist, straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange);
+    PID* drivePID = new PID(dist, straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange, straightParameters.settleThreshold, straightParameters.settleTime);
     float headingSetPoint = odom->getOrientation();
-    PID* headingPID = new PID(0, headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange);
+    PID* headingPID = new PID(0, headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange, headingParameters.settleThreshold, headingParameters.settleTime);
     while (!drivePID->isSettled()) {
       float distanceError = driveSetPoint - (odom->getLeftDistance() + odom->getRightDistance()) / 2;
       float driveMotorVelocity = drivePID->calculateNextStep(distanceError);
       
       driveMotorVelocity = clampStraightVelocity(driveMotorVelocity);
 
-      float headingError = reduceHeadingNegPiToPi(headingSetPoint - odom->getOrientation());
+      float headingError = reduceAngleNegPiToPi(headingSetPoint - odom->getOrientation());
       float headingMotorVelocity = headingPID->calculateNextStep(headingError);
 
       headingMotorVelocity = clampHeadingVelocity(headingMotorVelocity);
@@ -528,18 +528,18 @@ class Drive {
 
   // Drivetrain autonomous functions
   void turnToAngle(float targetAngle) {
-    float headingSetPoint = targetAngle;
-    PID* headingPID = new PID(headingSetPoint - odom->getOrientation(), headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange);
-    while (!headingPID->isSettled()) {
-      float headingError = reduceHeadingNegPiToPi(headingSetPoint - odom->getOrientation());
+    float turnSetPoint = targetAngle;
+    PID* turnPID = new PID(turnSetPoint - odom->getOrientation(), turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
+    while (!turnPID->isSettled()) {
+      float turnError = reduceAngleNegPiToPi(turnSetPoint - odom->getOrientation());
       remoteControl->Screen.clearScreen();
       remoteControl->Screen.setCursor(1,1);
-      remoteControl->Screen.print("Error: %f", headingError);
-      float headingMotorVelocity = headingPID->calculateNextStep(headingError);
+      remoteControl->Screen.print("Error: %f", turnError);
+      float turnMotorVelocity = turnPID->calculateNextStep(turnError);
 
-      headingMotorVelocity = clampHeadingVelocity(headingMotorVelocity);
+      turnMotorVelocity = clampHeadingVelocity(headingMotorVelocity);
       
-      driveVelocity(headingMotorVelocity, -headingMotorVelocity);
+      driveVelocity(turnMotorVelocity, -turnMotorVelocity);
 
       odometryStep();
     }
