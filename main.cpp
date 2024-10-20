@@ -188,6 +188,10 @@ class Odometry {
         orientGlobalDrift += orientGlobal - oldOrientGlobal;
       }
 
+      Brain.Screen.clearScreen();
+      Brain.Screen.setCursor(1, 1);
+      Brain.Screen.print("Orientation: %f", orientGlobal);
+
       // Calculate odometry
       oldGlobalPosition = globalPosition;
       globalPosition = globalPosition + getGlobalPositionChange();
