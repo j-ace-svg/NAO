@@ -537,7 +537,7 @@ class Drive {
       remoteControl->Screen.print("Error: %f", turnError);
       float turnMotorVelocity = turnPID->calculateNextStep(turnError);
 
-      turnMotorVelocity = clampHeadingVelocity(headingMotorVelocity);
+      turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
       
       driveVelocity(turnMotorVelocity, -turnMotorVelocity);
 
@@ -629,6 +629,7 @@ void babysFirstAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &in
      Turn to angle: robotDrivetrain->turnToAngle({angle});
      Delay: wait({time}, msec);
      */
+  robotDrivetrain->turnToAngle(M_PI / 2);
 }
 
 /* --------------- Start driver control ---------------*/
