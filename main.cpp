@@ -535,7 +535,7 @@ class Drive {
       remoteControl->Screen.clearScreen();
       remoteControl->Screen.setCursor(1,1);
       remoteControl->Screen.print("Error: %f", turnError);
-      Brain.Screen.newLine();
+      remoteControl->Screen.newLine();
       remoteControl->Screen.print("Orientation: %f", odom->getOrientation());
       float turnMotorVelocity = turnPID->calculateNextStep(turnError);
 
