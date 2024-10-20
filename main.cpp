@@ -534,8 +534,9 @@ class Drive {
       float turnError = reduceAngleNegPiToPi(turnSetPoint - odom->getOrientation());
       remoteControl->Screen.clearScreen();
       remoteControl->Screen.setCursor(1,1);
-      remoteControl->Screen.print("Error: %f\n", turnError);
-      remoteControl->Screen.print("Orientation: %f\n", odom->getOrientation());
+      remoteControl->Screen.print("Error: %f", turnError);
+      Brain.Screen.newLine();
+      remoteControl->Screen.print("Orientation: %f", odom->getOrientation());
       float turnMotorVelocity = turnPID->calculateNextStep(turnError);
 
       turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
@@ -602,21 +603,21 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &int
     float rightRotation = robotDrivetrain->odom->getDeltaRightAngle();
     float robotOrientation = robotDrivetrain->odom->getOrientation();
     float arcRadius = robotDrivetrain->odom->getPathArcRadius();
-    Brain.Screen.print("X coordinate: %f\n", xCoordinate);
+    Brain.Screen.print("X coordinate: %f", xCoordinate);
     Brain.Screen.newLine();
-    Brain.Screen.print("Y coordinate: %f\n", yCoordinate);
+    Brain.Screen.print("Y coordinate: %f", yCoordinate);
     Brain.Screen.newLine();
-    Brain.Screen.print("Left rotation: %f\n", leftRotation);
+    Brain.Screen.print("Left rotation: %f", leftRotation);
     Brain.Screen.newLine();
-    Brain.Screen.print("Right rotation: %f\n", rightRotation);
+    Brain.Screen.print("Right rotation: %f", rightRotation);
     Brain.Screen.newLine();
-    Brain.Screen.print("Orientation: %f\n", robotOrientation);
+    Brain.Screen.print("Orientation: %f", robotOrientation);
     Brain.Screen.newLine();
-    Brain.Screen.print("Arc Radius: %f\n", arcRadius);
+    Brain.Screen.print("Arc Radius: %f", arcRadius);
     Brain.Screen.newLine();
-    Brain.Screen.print("X: %f\n", globalPosition.x);
+    Brain.Screen.print("X: %f", globalPosition.x);
     Brain.Screen.newLine();
-    Brain.Screen.print("Y: %f\n", globalPosition.y);
+    Brain.Screen.print("Y: %f", globalPosition.y);
 
 
 
