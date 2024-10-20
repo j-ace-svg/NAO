@@ -534,7 +534,8 @@ class Drive {
       float turnError = reduceAngleNegPiToPi(turnSetPoint - odom->getOrientation());
       remoteControl->Screen.clearScreen();
       remoteControl->Screen.setCursor(1,1);
-      remoteControl->Screen.print("Error: %f", turnError);
+      remoteControl->Screen.print("Error: %f\n", turnError);
+      remoteControl->Screen.print("Orientation: %f\n", odom->getOrientation());
       float turnMotorVelocity = turnPID->calculateNextStep(turnError);
 
       turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
