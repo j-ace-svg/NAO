@@ -500,8 +500,8 @@ class Drive {
 
   // Drivetrain autonomous functions
   void odometryStep() {
-    odom->pollSensorValues();
     wait(DT, msec);
+    odom->pollSensorValues();
   }
   
   void driveDistance(float dist) {
