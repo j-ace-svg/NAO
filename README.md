@@ -19,6 +19,8 @@ I started working on this after getting my hands dirty trying to port [JAR-templ
 ## Using
 Initialize the drive class with the left and right side motor groups (only tank drive is supported), the directions for the left and right side motor groups (optional, default left forward and right reversed), the inertial sensor and the controller. The code has an example of this in the body of the `main` function, and looking at the constructors in the Drive class itself should be fairly self-explanatory. The inertial sensor isn't optional (this library is designed for my team's use case, and we use an inertial).
 
+Initialize the odometry in the drive class with the inertial drift epsilon (a value used to deadzone noise in the inertial value), the distance from the tracking center to the left side of the drive train (or the left tracking wheel), the distance to the right side, the distance to the back, the radius of the wheels on the left of the robot, the radius of the wheels on the right side, and the PID parameters for driving straight, adjusting heading, and turning.
+
 The Drive class has a default drive function that can be called every frame for basic tank driver control. This is demonstrated in the `main` function as well. Since the odometry library isn't finished yet, there is no other functionality.
 
 ## Contributing
