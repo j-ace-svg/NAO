@@ -1,4 +1,3 @@
-
 #pragma region VEXcode Generated Robot Configuration
 // Make sure all required headers are included.
 #include <stdio.h>
@@ -191,11 +190,11 @@ class Odometry {
 
       Brain.Screen.clearScreen();
       Brain.Screen.setCursor(1, 1);
-      Brain.Screen.print("Orientation: %f", orientGlobal);
+      Brain.Screen.print("Orientation: %f", inertialSensor->rotation(turns));
 
       // Calculate odometry
-      oldGlobalPosition = globalPosition;
-      globalPosition = globalPosition + getGlobalPositionChange();
+      //oldGlobalPosition = globalPosition;
+      //globalPosition = globalPosition + getGlobalPositionChange();
     }
 
     // Getter methods
@@ -335,7 +334,8 @@ class Odometry {
 };
 
 class PID {
-  private:
+  //private:
+  public:
     float kp;
     float ki;
     float kd;
@@ -348,13 +348,15 @@ class PID {
     float settleTime;
     float timeSettled;
 
-  public:
+  //public:
 
     PID(float startError, float _kp, float _ki, float _kd, float _integralRange, float _settleThreshold, float _settleTime) {
       kp = _kp;
       ki = _ki;
       kd = _kd;
       integralRange = _integralRange;
+      settleThreshold = _settleThreshold;
+      settleTime = _settleTime;
       accumulatedError = 0;
       previousError = startError;
       timeRunning = 0;
@@ -516,6 +518,10 @@ class Drive {
     PID* headingPID = new PID(0, headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange, headingParameters.settleThreshold, headingParameters.settleTime);
     while (!drivePID->isSettled()) {
       float distanceError = driveSetPoint - (odom->getLeftDistance() + odom->getRightDistance()) / 2;
+      //remoteControl->Screen.clearScreen();
+      //remoteControl->Screen.setCursor(1,1);
+      //remoteControl->Screen.print("Time settled: %f", turnPID->timeSettled);
+      //remoteControl->Screen.print("Error: %f", distanceError);
       float driveMotorVelocity = drivePID->calculateNextStep(distanceError);
       
       driveMotorVelocity = clampStraightVelocity(driveMotorVelocity);
@@ -539,6 +545,7 @@ class Drive {
       float turnError = reduceAngleNegPiToPi(turnSetPoint - odom->getOrientation());
       remoteControl->Screen.clearScreen();
       remoteControl->Screen.setCursor(1,1);
+      //remoteControl->Screen.print("Time settled: %f", turnPID->timeSettled);
       remoteControl->Screen.print("Error: %f", turnError);
       remoteControl->Screen.newLine();
       remoteControl->Screen.print("Orientation: %f", odom->getOrientation());
@@ -585,14 +592,15 @@ digital_out RightMoGoPneumatic = digital_out(Brain.ThreeWirePort.H);
 controller RemoteControl = controller(primary);
 
 // Odometry
+/* kp, ki, kd, integralRange, settleThreshold, settleTime, maxVelocity */
 float InertialDriftEpsilon = 0.000025;
 float DistLeft = 7.5;
 float DistRight = 7.5;
 float DistBack = 0;
 float LeftWheelRadius = 1.625;
 float RightWheelRadius = 1.625;
-odomParameters StraightParameters = {1, 0, 0, 0, 0, 0.5, 100};
-odomParameters TurnParameters = {1, 0, 0, 0, 75, 0.1, 50};
+odomParameters StraightParameters = {5, 0, 0, 0, 0, 0.5, 100};
+odomParameters TurnParameters = {15, 0.05, 10, M_PI / 2, 0.01, 0.1, 100}; // kU = 34, pU = 1.398
 odomParameters HeadingParameters = {1, 0, 0, 0, 0, 0.1, 100};
 
 /* --------------- Start autons --------------- */
@@ -636,7 +644,8 @@ void babysFirstAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &in
      Turn to angle: robotDrivetrain->turnToAngle({angle});
      Delay: wait({time}, msec);
      */
-  robotDrivetrain->turnToAngle(M_PI / 2);
+  wait(2000, msec);
+  robotDrivetrain->driveDistance(20);
 }
 
 /* --------------- Start driver control ---------------*/
