@@ -705,11 +705,42 @@ void driverControl(Drive* robotDrivetrain, motor &intakeMotor, digital_out &inta
 
 /* --------------- Start main program --------------- */
 
+void preAutonomous(void) {
+  // actions to do when the program starts
+  Brain.Screen.clearScreen();
+  Brain.Screen.print("pre auton code");
+  wait(2, seconds);
+}
 
-
-int main() {
+void templateAutonomous(void) {
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, HeadingParameters);
 
   babysFirstAuton(robotDrivetrain, IntakeMotor, IntakePneumatic, ArmMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+}
+
+void templateDriverControl(void) {
+  Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
+  robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, HeadingParameters);
+
+  driverControl(robotDrivetrain, IntakeMotor, IntakePneumatic, ArmMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+}
+
+int main() {
+  // Initializing Robot Configuration. DO NOT REMOVE!
+  vexcodeInit();
+  // create competition instance
+  competition Competition;
+
+  // Set up callbacks for autonomous and driver control periods.
+  Competition.autonomous(templateAutonomous);
+  Competition.drivercontrol(templateDriverControl);
+
+  // Run the pre-autonomous function.
+  preAutonomous();
+
+  // Prevent main from exiting with an infinite loop.
+  while (true) {
+    wait(100, msec);
+  }
 }
