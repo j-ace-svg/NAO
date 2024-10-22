@@ -644,7 +644,7 @@ void babysFirstAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &in
      Turn to angle: robotDrivetrain->turnToAngle({angle});
      Delay: wait({time}, msec);
      */
-  wait(2000, msec);
+  //wait(2000, msec);
   robotDrivetrain->driveDistance(20);
 }
 
