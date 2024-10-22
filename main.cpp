@@ -505,6 +505,10 @@ class Drive {
     return headingAngle;
   }
 
+  float degreesToRadians(float angleDegrees) {
+    return angleDegrees * M_PI / 180;
+  }
+
   // Drivetrain autonomous functions
   void odometryStep() {
     wait(DT, msec);
@@ -557,6 +561,10 @@ class Drive {
 
       odometryStep();
     }
+  }
+
+  void turnToAngleDegrees(float targetAngleDegrees) {
+    turnToAngle(degreesToRadians(targetAngleDegrees));
   }
 
 };
