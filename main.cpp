@@ -607,7 +607,7 @@ float DistRight = 7.5;
 float DistBack = 0;
 float LeftWheelRadius = 1.625;
 float RightWheelRadius = 1.625;
-odomParameters StraightParameters = {5, 0, 0, 0, 0, 0.5, 100};
+odomParameters StraightParameters = {5, 0, 0, 0, 0.25, 0.25, 80};
 odomParameters TurnParameters = {15, 0.05, 10, M_PI / 2, 0.01, 0.1, 100}; // kU = 34, pU = 1.398
 odomParameters HeadingParameters = {1, 0, 0, 0, 0, 0.1, 100};
 
