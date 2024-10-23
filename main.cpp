@@ -453,10 +453,18 @@ class Drive {
   // General drive functions
   void driveVelocity(float leftMotorPower, float rightMotorPower) {
     leftDrive->setVelocity(leftMotorPower, percent);
-    leftDrive->spin(leftDirection);
+    if (leftMotorPower == 0) {
+      leftDrive->stop(hold);
+    } else {
+      leftDrive->spin(leftDirection);
+    }
 
     rightDrive->setVelocity(rightMotorPower, percent);
-    rightDrive->spin(rightDirection);
+    if (rightMotorPower == 0) {
+      rightDrive->stop(hold);
+    } else {
+      rightDrive->spin(rightDirection);
+    }
   }
 
   void driveVelocity(float motorPower) {
@@ -539,6 +547,7 @@ class Drive {
 
       odometryStep();
     }
+    driveVelocity(0);
   }
 
   // Drivetrain autonomous functions
@@ -561,6 +570,7 @@ class Drive {
 
       odometryStep();
     }
+    driveVelocity(0);
   }
 
   void turnToAngleDegrees(float targetAngleDegrees) {
@@ -609,7 +619,7 @@ float RightWheelRadius = 1.625;
 /* kp, ki, kd, integralRange, settleThreshold, settleTime, maxVelocity */
 odomParameters StraightParameters = {5, 0, 0, 0, 0.25, 0.25, 80};
 odomParameters TurnParameters = {15, 0.029, 10, M_PI / 2, 0.01, 0.1, 100}; // kU = 34, pU = 1.398
-odomParameters HeadingParameters = {1, 0, 0, 0, 0, 0.1, 100};
+odomParameters HeadingParameters = {0, 0, 0, 0, 0, 0.1, 100};
 
 /* --------------- Start autons --------------- */
 
