@@ -600,13 +600,13 @@ digital_out RightMoGoPneumatic = digital_out(Brain.ThreeWirePort.H);
 controller RemoteControl = controller(primary);
 
 // Odometry
-/* kp, ki, kd, integralRange, settleThreshold, settleTime, maxVelocity */
 float InertialDriftEpsilon = 0.000025;
 float DistLeft = 7.5;
 float DistRight = 7.5;
 float DistBack = 0;
 float LeftWheelRadius = 1.625;
 float RightWheelRadius = 1.625;
+/* kp, ki, kd, integralRange, settleThreshold, settleTime, maxVelocity */
 odomParameters StraightParameters = {5, 0, 0, 0, 0.25, 0.25, 80};
 odomParameters TurnParameters = {15, 0.05, 10, M_PI / 2, 0.01, 0.1, 100}; // kU = 34, pU = 1.398
 odomParameters HeadingParameters = {1, 0, 0, 0, 0, 0.1, 100};
@@ -652,8 +652,26 @@ void babysFirstAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &in
      Turn to angle: robotDrivetrain->turnToAngle({angle});
      Delay: wait({time}, msec);
      */
-  //wait(2000, msec);
-  robotDrivetrain->driveDistance(20);
+  robotDrivetrain->driveDistance(-14.75);
+  robotDrivetrain->turnToAngle(-M_PI/2);
+  robotDrivetrain->driveDistance(-2);
+  intakeMotor.setVelocity(100,percent);
+  intakeMotor.spin(forward);
+  wait(1000, msec);
+  intakeMotor.stop();
+  robotDrivetrain->driveDistance(4);
+  robotDrivetrain->turnToAngle(M_PI*.73);
+  robotDrivetrain->driveDistance(-35);
+  wait(250, msec);
+  LeftMoGoPneumatic.set(true);
+  RightMoGoPneumatic.set(true);
+  robotDrivetrain->turnToAngle(-M_PI*.15);
+  intakeMotor.spin(forward);
+  robotDrivetrain->driveDistance(30);
+  wait(1000, msec);
+  robotDrivetrain->turnToAngle(M_PI);
+  robotDrivetrain->driveDistance(50);
+  robotDrivetrain->driveDistance(50);
 }
 
 /* --------------- Start driver control ---------------*/
@@ -720,14 +738,14 @@ void preAutonomous(void) {
   wait(2, seconds);
 }
 
-void templateAutonomous(void) {
+void templateAutonomous(void) { // Dummy wrapper function to call the desired autonomous (because the competition template can't take parameters)
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, HeadingParameters);
 
   babysFirstAuton(robotDrivetrain, IntakeMotor, IntakePneumatic, ArmMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
-void templateDriverControl(void) {
+void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, HeadingParameters);
 
