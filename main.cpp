@@ -618,7 +618,7 @@ float LeftWheelRadius = 1.625;
 float RightWheelRadius = 1.625;
 /* kp, ki, kd, integralRange, settleThreshold, settleTime, maxVelocity */
 odomParameters StraightParameters = {5, 0, 0, 0, 0.25, 0.25, 80};
-odomParameters TurnParameters = {15, 0.029, 11.5, M_PI / 2, 0.025, 0.2, 90}; // kU = 34, pU = 1.398
+odomParameters TurnParameters = {15, 0.029, 10, M_PI / 2, 0.025, 0.2, 50}; // kU = 34, pU = 1.398
 odomParameters HeadingParameters = {0, 0, 0, 0, 0, 0.1, 100};
 
 /* --------------- Start autons --------------- */
@@ -662,31 +662,44 @@ void babysFirstAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &in
      Turn to angle: robotDrivetrain->turnToAngle({angle});
      Delay: wait({time}, msec);
      */
-  robotDrivetrain->driveDistance(-14.75);
+  robotDrivetrain->driveDistance(-14.25);
   robotDrivetrain->turnToAngle(-M_PI/2);
-  robotDrivetrain->driveDistance(-2);
+  robotDrivetrain->driveDistance(-.75);
+  LeftMoGoPneumatic.set(true);
+  RightMoGoPneumatic.set(true);
   intakeMotor.setVelocity(100,percent);
   intakeMotor.spin(forward);
   wait(2000, msec);
   intakeMotor.stop();
-  robotDrivetrain->driveDistance(4);
-  robotDrivetrain->turnToAngle(M_PI*.72);
-  robotDrivetrain->driveDistance(-40);
-  wait(1000, msec);
+  LeftMoGoPneumatic.set(false);
+  RightMoGoPneumatic.set(false);
+  robotDrivetrain->driveDistance(3);
+  robotDrivetrain->turnToAngle(M_PI*.71);
+  robotDrivetrain->driveDistance(-33);
+  robotDrivetrain->turnParameters.maxVelocity = 20;
+  robotDrivetrain->driveDistance(-15);
+  robotDrivetrain->turnParameters.maxVelocity = 80;
+  //wait(1000, msec);
   LeftMoGoPneumatic.set(true);
   RightMoGoPneumatic.set(true);
-  robotDrivetrain->turnToAngle(-M_PI*.15);
+  robotDrivetrain->driveDistance(3);
+  robotDrivetrain->turnToAngle(-M_PI*.10);
   intakeMotor.spin(forward);
-  robotDrivetrain->driveDistance(30);
-  wait(1000, msec);
+  robotDrivetrain->driveDistance(35);
+  //wait(1000, msec);
   robotDrivetrain->turnToAngle(M_PI);
-  robotDrivetrain->driveDistance(50);
+  robotDrivetrain->driveDistance(20);
+  LeftMoGoPneumatic.set(false);
+  RightMoGoPneumatic.set(false);
+  robotDrivetrain->driveDistance(35);
 
 }
 
 /* --------------- Start driver control ---------------*/
 
 void driverControl(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+  robotDrivetrain->leftDrive->stop(coast);
+  robotDrivetrain->rightDrive->stop(coast);
   while (true) {
     robotDrivetrain->driverControl();
 
@@ -745,7 +758,8 @@ void preAutonomous(void) {
   // actions to do when the program starts
   Brain.Screen.clearScreen();
   Brain.Screen.print("pre auton code");
-  wait(2, seconds);
+  InertialSensor.calibrate();
+  wait(3, seconds);
 }
 
 void templateAutonomous(void) { // Dummy wrapper function to call the desired autonomous (because the competition template can't take parameters)
