@@ -656,13 +656,7 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &int
   }
 }
 
-void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
-  /* Demo functions:
-     Drive forward: robotDrivetrain->driveDistance({distance});
-     Turn to angle: robotDrivetrain->turnToAngle({angle});
-     Delay: wait({time}, msec);
-     */
-  /*
+void redLowAlly(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->straightParameters.maxVelocity = 35;
   robotDrivetrain->turnParameters.maxVelocity = 40;
   robotDrivetrain->driveDistance(-17.3);
@@ -699,9 +693,9 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   wait(1500, msec);
   robotDrivetrain->turnParameters.maxVelocity = 50;
   robotDrivetrain->turnToAngle(M_PI*1.075);
- 
-  
-  
+}
+
+void blueLowAlly(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->straightParameters.maxVelocity = 35;
   robotDrivetrain->turnParameters.maxVelocity = 40;
   robotDrivetrain->driveDistance(-17.3);
@@ -738,9 +732,15 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   wait(1500, msec);
   robotDrivetrain->turnParameters.maxVelocity = 50;
   robotDrivetrain->turnToAngle(M_PI);
-    
-  */
-  /*
+}
+
+void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+  /* Demo functions:
+     Drive forward: robotDrivetrain->driveDistance({distance});
+     Turn to angle: robotDrivetrain->turnToAngle({angle});
+     Delay: wait({time}, msec);
+     */
+  /* [Removed auton]
   robotDrivetrain->straightParameters.maxVelocity = 80;
   robotDrivetrain->turnParameters.maxVelocity = 60;
   robotDrivetrain->driveDistance(-24);
@@ -765,7 +765,8 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   robotDrivetrain->driveDistance(20);
   robotDrivetrain->straightParameters.maxVelocity = 20;
   robotDrivetrain->driveDistance(39);
-  /*
+  */
+  /* [Removed auton]
 
   robotDrivetrain->straightParameters.maxVelocity = 80;
   robotDrivetrain->turnParameters.maxVelocity = 80;
@@ -850,7 +851,7 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   robotDrivetrain->turnToAngle(M_PI);
   robotDrivetrain->straightParameters.maxVelocity = 80;
   robotDrivetrain->driveDistance(60);
-  /*
+  /* [bad auton]
   
   robotDrivetrain->straightParameters.maxVelocity = 40;
   robotDrivetrain->turnParameters.maxVelocity = 40;
@@ -903,6 +904,10 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   robotDrivetrain->turnToAngle(M_PI);
   robotDrivetrain->driveDistance(54);
   */
+}
+
+void turn90Degrees(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+  robotDrivetrain->turnToAngleDegrees(90);
 }
 
 /* --------------- Start driver control ---------------*/
@@ -976,7 +981,7 @@ void templateAutonomous(void) { // Dummy wrapper function to call the desired au
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, HeadingParameters);
 
-  soloHighRed(robotDrivetrain, IntakeMotor, IntakePneumatic, ArmMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+  turn90Degrees(robotDrivetrain, IntakeMotor, IntakePneumatic, ArmMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
