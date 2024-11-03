@@ -965,9 +965,9 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &
   }
 }
 
-/* --------------- Start main program --------------- */
+/* --------------- Start auton selector --------------- */
 
-void autonSelector()
+void autonSelector();
 
 /* --------------- Start main program --------------- */
 
