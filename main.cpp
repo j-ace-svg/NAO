@@ -597,7 +597,7 @@ motor_group RightDrive = motor_group(RightDriveMotorFront, RightDriveMotorMiddle
 inertial InertialSensor = inertial(PORT7);
 
 // Intake
-motor IntakeMotor = motor(PORT10, ratio36_1, false);
+motor IntakeMotor = motor(PORT10, ratio36_1, true);
 digital_out IntakePneumatic = digital_out(Brain.ThreeWirePort.F);
 
 // Arm
@@ -656,7 +656,7 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &int
   }
 }
 
-void babysFirstAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   /* Demo functions:
      Drive forward: robotDrivetrain->driveDistance({distance});
      Turn to angle: robotDrivetrain->turnToAngle({angle});
@@ -976,7 +976,7 @@ void templateAutonomous(void) { // Dummy wrapper function to call the desired au
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, HeadingParameters);
 
-  babysFirstAuton(robotDrivetrain, IntakeMotor, IntakePneumatic, ArmMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+  soloHighRed(robotDrivetrain, IntakeMotor, IntakePneumatic, ArmMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
