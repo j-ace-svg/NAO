@@ -597,11 +597,9 @@ motor_group RightDrive = motor_group(RightDriveMotorFront, RightDriveMotorMiddle
 inertial InertialSensor = inertial(PORT7);
 
 // Intake
-motor IntakeMotor = motor(PORT10, ratio36_1, true);
+motor IntakeRollerMotor = motor(PORT10, ratio36_1, true);
 digital_out IntakePneumatic = digital_out(Brain.ThreeWirePort.F);
-
-// Arm
-motor ArmMotor = motor(PORT9, ratio36_1, false);
+motor IntakeBeltMotor = motor(PORT9, ratio36_1, true);
 
 // MoGo Mech
 digital_out LeftMoGoPneumatic = digital_out(Brain.ThreeWirePort.G);
@@ -623,7 +621,7 @@ odomParameters HeadingParameters = {0, 0, 0, 0, 0, 0.1, 100};
 
 /* --------------- Start autons --------------- */
 
-void odomDebugAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &intakePneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   while (true) {
     Brain.Screen.clearScreen();
     Brain.Screen.setCursor(1, 1);
@@ -656,7 +654,7 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &int
   }
 }
 
-void redLowAlly(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void redLowAlly(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &intakePneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->straightParameters.maxVelocity = 35;
   robotDrivetrain->turnParameters.maxVelocity = 40;
   robotDrivetrain->driveDistance(-17.3);
@@ -664,13 +662,13 @@ void redLowAlly(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakeP
   robotDrivetrain->driveDistance(-1.6);
   LeftMoGoPneumatic.set(true);
   RightMoGoPneumatic.set(true);
-  ArmMotor.setVelocity(100,percent);
-  intakeMotor.setVelocity(100,percent);
-  intakeMotor.spin(forward);
-  ArmMotor.spin(forward);
+  IntakeRollerMotor.setVelocity(100,percent);
+  intakeBeltMotor.setVelocity(100,percent);
+  intakeBeltMotor.spin(forward);
+  IntakeRollerMotor.spin(forward);
   wait(1000, msec);
-  intakeMotor.stop();
-  ArmMotor.stop();
+  intakeBeltMotor.stop();
+  IntakeRollerMotor.stop();
   LeftMoGoPneumatic.set(false);
   RightMoGoPneumatic.set(false);
   robotDrivetrain->driveDistance(3);
@@ -687,15 +685,15 @@ void redLowAlly(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakeP
   robotDrivetrain->straightParameters.maxVelocity = 75;
   robotDrivetrain->driveDistance(6.5);
   robotDrivetrain->turnToAngle(-M_PI*.08);
-  intakeMotor.spin(forward);
-  armMotor.spin(forward);
+  intakeBeltMotor.spin(forward);
+  IntakeRollerMotor.spin(forward);
   robotDrivetrain->driveDistance(37);
   wait(1500, msec);
   robotDrivetrain->turnParameters.maxVelocity = 50;
   robotDrivetrain->turnToAngle(M_PI*1.075);
 }
 
-void blueLowAlly(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void blueLowAlly(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &intakePneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->straightParameters.maxVelocity = 35;
   robotDrivetrain->turnParameters.maxVelocity = 40;
   robotDrivetrain->driveDistance(-17.3);
@@ -703,13 +701,13 @@ void blueLowAlly(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   robotDrivetrain->driveDistance(-1.85);
   LeftMoGoPneumatic.set(true);
   RightMoGoPneumatic.set(true);
-  ArmMotor.setVelocity(100,percent);
-  intakeMotor.setVelocity(100,percent);
-  intakeMotor.spin(forward);
-  ArmMotor.spin(forward);
+  IntakeRollerMotor.setVelocity(100,percent);
+  intakeBeltMotor.setVelocity(100,percent);
+  intakeBeltMotor.spin(forward);
+  IntakeRollerMotor.spin(forward);
   wait(1000, msec);
-  intakeMotor.stop();
-  ArmMotor.stop();
+  intakeBeltMotor.stop();
+  IntakeRollerMotor.stop();
   LeftMoGoPneumatic.set(false);
   RightMoGoPneumatic.set(false);
   robotDrivetrain->driveDistance(3.25);
@@ -726,15 +724,15 @@ void blueLowAlly(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   robotDrivetrain->straightParameters.maxVelocity = 75;
   robotDrivetrain->driveDistance(6.5);
   robotDrivetrain->turnToAngle(M_PI*.08);
-  intakeMotor.spin(forward);
-  armMotor.spin(forward);
+  intakeBeltMotor.spin(forward);
+  IntakeRollerMotor.spin(forward);
   robotDrivetrain->driveDistance(37);
   wait(1500, msec);
   robotDrivetrain->turnParameters.maxVelocity = 50;
   robotDrivetrain->turnToAngle(M_PI);
 }
 
-void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void soloHighRed(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &intakePneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   /* Demo functions:
      Drive forward: robotDrivetrain->driveDistance({distance});
      Turn to angle: robotDrivetrain->turnToAngle({angle});
@@ -748,10 +746,10 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   robotDrivetrain->driveDistance(-7);
   LeftMoGoPneumatic.set(true);
   RightMoGoPneumatic.set(true);
-  ArmMotor.setVelocity(100,percent);
-  intakeMotor.setVelocity(100,percent);
-  intakeMotor.spin(forward);
-  ArmMotor.spin(forward);
+  IntakeRollerMotor.setVelocity(100,percent);
+  intakeBeltMotor.setVelocity(100,percent);
+  intakeBeltMotor.spin(forward);
+  IntakeRollerMotor.spin(forward);
   robotDrivetrain->driveDistance(3);
   wait(1000, msec);
   robotDrivetrain->turnToAngle(-M_PI*.64);
@@ -775,10 +773,10 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   robotDrivetrain->driveDistance(-7);
   LeftMoGoPneumatic.set(true);
   RightMoGoPneumatic.set(true);
-  ArmMotor.setVelocity(100,percent);
-  intakeMotor.setVelocity(100,percent);
-  intakeMotor.spin(forward);
-  ArmMotor.spin(forward);
+  IntakeRollerMotor.setVelocity(100,percent);
+  intakeBeltMotor.setVelocity(100,percent);
+  intakeBeltMotor.spin(forward);
+  IntakeRollerMotor.spin(forward);
   wait(750, msec);
   robotDrivetrain->turnToAngle(M_PI*.76);
   robotDrivetrain->straightParameters.maxVelocity = 75;
@@ -808,13 +806,13 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   robotDrivetrain->driveDistance(-2.25);
   LeftMoGoPneumatic.set(true);
   RightMoGoPneumatic.set(true);
-  ArmMotor.setVelocity(100,percent);
-  intakeMotor.setVelocity(100,percent);
-  intakeMotor.spin(forward);
-  ArmMotor.spin(forward);
+  IntakeRollerMotor.setVelocity(100,percent);
+  intakeBeltMotor.setVelocity(100,percent);
+  intakeBeltMotor.spin(forward);
+  IntakeRollerMotor.spin(forward);
   wait(550, msec);
-  intakeMotor.stop();
-  ArmMotor.stop();
+  intakeBeltMotor.stop();
+  IntakeRollerMotor.stop();
   LeftMoGoPneumatic.set(false);
   RightMoGoPneumatic.set(false);
   robotDrivetrain->driveDistance(3);
@@ -833,10 +831,10 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   RightMoGoPneumatic.set(true);
   wait(100, msec);
   robotDrivetrain->turnToAngle(M_PI*.285);
-  ArmMotor.setVelocity(100,percent);
-  intakeMotor.setVelocity(100,percent);
-  intakeMotor.spin(forward);
-  ArmMotor.spin(forward);
+  IntakeRollerMotor.setVelocity(100,percent);
+  intakeBeltMotor.setVelocity(100,percent);
+  intakeBeltMotor.spin(forward);
+  IntakeRollerMotor.spin(forward);
   robotDrivetrain->straightParameters.maxVelocity = 80;
   robotDrivetrain->driveDistance(27);
   wait(400, msec);
@@ -860,13 +858,13 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   robotDrivetrain->driveDistance(-2);
   LeftMoGoPneumatic.set(true);
   RightMoGoPneumatic.set(true);
-  ArmMotor.setVelocity(100,percent);
-  intakeMotor.setVelocity(100,percent);
-  intakeMotor.spin(forward);
-  ArmMotor.spin(forward);
+  IntakeRollerMotor.setVelocity(100,percent);
+  intakeBeltMotor.setVelocity(100,percent);
+  intakeBeltMotor.spin(forward);
+  IntakeRollerMotor.spin(forward);
   wait(650, msec);
-  intakeMotor.stop();
-  ArmMotor.stop();
+  intakeBeltMotor.stop();
+  IntakeRollerMotor.stop();
   LeftMoGoPneumatic.set(false);
   RightMoGoPneumatic.set(false);
   robotDrivetrain->driveDistance(3.3);
@@ -882,10 +880,10 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   RightMoGoPneumatic.set(true);
   wait(100, msec);
   robotDrivetrain->turnToAngle(M_PI*.26);
-  ArmMotor.setVelocity(100,percent);
-  intakeMotor.setVelocity(100,percent);
-  intakeMotor.spin(forward);
-  ArmMotor.spin(forward);
+  IntakeRollerMotor.setVelocity(100,percent);
+  intakeBeltMotor.setVelocity(100,percent);
+  intakeBeltMotor.spin(forward);
+  IntakeRollerMotor.spin(forward);
   robotDrivetrain->straightParameters.maxVelocity = 80;
   robotDrivetrain->driveDistance(28);
   wait(200, msec);
@@ -906,13 +904,13 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intake
   */
 }
 
-void turn90Degrees(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void turn90Degrees(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &intakePneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->turnToAngleDegrees(90);
 }
 
 /* --------------- Start driver control ---------------*/
 
-void driverControl(Drive* robotDrivetrain, motor &intakeMotor, digital_out &intakePneumatic, motor &armMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &intakePneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->leftDrive->stop(coast);
   robotDrivetrain->rightDrive->stop(coast);
   while (true) {
@@ -924,8 +922,8 @@ void driverControl(Drive* robotDrivetrain, motor &intakeMotor, digital_out &inta
     
     int intakeSpinDirection = r2 - r1;
 
-    intakeMotor.setVelocity(100 * (float) intakeSpinDirection, percent);
-    intakeMotor.spin(forward);
+    intakeBeltMotor.setVelocity(100 * (float) intakeSpinDirection, percent);
+    intakeBeltMotor.spin(forward);
 
     
     bool bX = robotDrivetrain->remoteControl->ButtonX.pressing();
@@ -946,8 +944,8 @@ void driverControl(Drive* robotDrivetrain, motor &intakeMotor, digital_out &inta
     
     int armSpinDirection = bUp - bDown;
 
-    armMotor.setVelocity(100 * (float) armSpinDirection, percent);
-    armMotor.spin(forward);
+    IntakeRollerMotor.setVelocity(100 * (float) armSpinDirection, percent);
+    IntakeRollerMotor.spin(forward);
 
     // MoGo Mech
     bool l1 = robotDrivetrain->remoteControl->ButtonL1.pressing();
@@ -969,6 +967,10 @@ void driverControl(Drive* robotDrivetrain, motor &intakeMotor, digital_out &inta
 
 /* --------------- Start main program --------------- */
 
+void autonSelector()
+
+/* --------------- Start main program --------------- */
+
 void preAutonomous(void) {
   // actions to do when the program starts
   Brain.Screen.clearScreen();
@@ -981,14 +983,14 @@ void templateAutonomous(void) { // Dummy wrapper function to call the desired au
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, HeadingParameters);
 
-  turn90Degrees(robotDrivetrain, IntakeMotor, IntakePneumatic, ArmMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+  turn90Degrees(robotDrivetrain, IntakeBeltMotor, IntakePneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, HeadingParameters);
 
-  driverControl(robotDrivetrain, IntakeMotor, IntakePneumatic, ArmMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+  driverControl(robotDrivetrain, IntakeBeltMotor, IntakePneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 int main() {
