@@ -618,7 +618,7 @@ float LeftWheelRadius = 1.625;
 float RightWheelRadius = 1.625;
 /* kp, ki, kd, integralRange, settleThreshold, settleTime, maxVelocity */
 odomParameters StraightParameters = {5, 0, 0, 0, 0.25, 0.25, 80};
-odomParameters TurnParameters = {15, 0.029, 10, M_PI / 2, 0.025, 0.2, 50}; // kU = 34, pU = 1.398
+odomParameters TurnParameters = {15, 0.029, 10, M_PI / 2, 0.035, 0.2, 50}; // kU = 34, pU = 1.398
 odomParameters HeadingParameters = {0, 0, 0, 0, 0, 0.1, 100};
 
 /* --------------- Start autons --------------- */
@@ -662,37 +662,247 @@ void babysFirstAuton(Drive* robotDrivetrain, motor &intakeMotor, digital_out &in
      Turn to angle: robotDrivetrain->turnToAngle({angle});
      Delay: wait({time}, msec);
      */
-  robotDrivetrain->driveDistance(-14.25);
+  /*
+  robotDrivetrain->straightParameters.maxVelocity = 35;
+  robotDrivetrain->turnParameters.maxVelocity = 40;
+  robotDrivetrain->driveDistance(-17.3);
   robotDrivetrain->turnToAngle(-M_PI/2);
-  robotDrivetrain->driveDistance(-.75);
+  robotDrivetrain->driveDistance(-1.6);
   LeftMoGoPneumatic.set(true);
   RightMoGoPneumatic.set(true);
+  ArmMotor.setVelocity(100,percent);
   intakeMotor.setVelocity(100,percent);
   intakeMotor.spin(forward);
-  wait(2000, msec);
+  ArmMotor.spin(forward);
+  wait(1000, msec);
   intakeMotor.stop();
+  ArmMotor.stop();
   LeftMoGoPneumatic.set(false);
   RightMoGoPneumatic.set(false);
   robotDrivetrain->driveDistance(3);
-  robotDrivetrain->turnToAngle(M_PI*.71);
-  robotDrivetrain->driveDistance(-33);
-  robotDrivetrain->turnParameters.maxVelocity = 20;
-  robotDrivetrain->driveDistance(-15);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
   robotDrivetrain->turnParameters.maxVelocity = 80;
-  //wait(1000, msec);
+  robotDrivetrain->turnToAngle(M_PI*.665);
+  robotDrivetrain->driveDistance(-40);
+  robotDrivetrain->straightParameters.maxVelocity = 35;
+  robotDrivetrain->driveDistance(-9);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
   LeftMoGoPneumatic.set(true);
   RightMoGoPneumatic.set(true);
-  robotDrivetrain->driveDistance(3);
-  robotDrivetrain->turnToAngle(-M_PI*.10);
+  wait(500, msec);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->driveDistance(6.5);
+  robotDrivetrain->turnToAngle(-M_PI*.08);
   intakeMotor.spin(forward);
-  robotDrivetrain->driveDistance(35);
-  //wait(1000, msec);
-  robotDrivetrain->turnToAngle(M_PI);
-  robotDrivetrain->driveDistance(20);
+  armMotor.spin(forward);
+  robotDrivetrain->driveDistance(37);
+  wait(1500, msec);
+  robotDrivetrain->turnParameters.maxVelocity = 50;
+  robotDrivetrain->turnToAngle(M_PI*1.075);
+ 
+  
+  
+  robotDrivetrain->straightParameters.maxVelocity = 35;
+  robotDrivetrain->turnParameters.maxVelocity = 40;
+  robotDrivetrain->driveDistance(-17.3);
+  robotDrivetrain->turnToAngle(M_PI/2);
+  robotDrivetrain->driveDistance(-1.85);
+  LeftMoGoPneumatic.set(true);
+  RightMoGoPneumatic.set(true);
+  ArmMotor.setVelocity(100,percent);
+  intakeMotor.setVelocity(100,percent);
+  intakeMotor.spin(forward);
+  ArmMotor.spin(forward);
+  wait(1000, msec);
+  intakeMotor.stop();
+  ArmMotor.stop();
   LeftMoGoPneumatic.set(false);
   RightMoGoPneumatic.set(false);
-  robotDrivetrain->driveDistance(35);
+  robotDrivetrain->driveDistance(3.25);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->turnParameters.maxVelocity = 80;
+  robotDrivetrain->turnToAngle(-M_PI*.68);
+  robotDrivetrain->driveDistance(-37);
+  robotDrivetrain->straightParameters.maxVelocity = 35;
+  robotDrivetrain->driveDistance(-12);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  LeftMoGoPneumatic.set(true);
+  RightMoGoPneumatic.set(true);
+  wait(500, msec);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->driveDistance(6.5);
+  robotDrivetrain->turnToAngle(M_PI*.08);
+  intakeMotor.spin(forward);
+  armMotor.spin(forward);
+  robotDrivetrain->driveDistance(37);
+  wait(1500, msec);
+  robotDrivetrain->turnParameters.maxVelocity = 50;
+  robotDrivetrain->turnToAngle(M_PI);
+    
+  */
+  /*
+  robotDrivetrain->straightParameters.maxVelocity = 80;
+  robotDrivetrain->turnParameters.maxVelocity = 60;
+  robotDrivetrain->driveDistance(-24);
+  robotDrivetrain->straightParameters.maxVelocity = 20;
+  robotDrivetrain->driveDistance(-7);
+  LeftMoGoPneumatic.set(true);
+  RightMoGoPneumatic.set(true);
+  ArmMotor.setVelocity(100,percent);
+  intakeMotor.setVelocity(100,percent);
+  intakeMotor.spin(forward);
+  ArmMotor.spin(forward);
+  robotDrivetrain->driveDistance(3);
+  wait(1000, msec);
+  robotDrivetrain->turnToAngle(-M_PI*.64);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->driveDistance(33);
+  robotDrivetrain->straightParameters.maxVelocity = 17.5;
+  robotDrivetrain->driveDistance(3);
+  robotDrivetrain->driveDistance(-10);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->turnToAngle(M_PI*.45);
+  robotDrivetrain->driveDistance(20);
+  robotDrivetrain->straightParameters.maxVelocity = 20;
+  robotDrivetrain->driveDistance(39);
+  /*
 
+  robotDrivetrain->straightParameters.maxVelocity = 80;
+  robotDrivetrain->turnParameters.maxVelocity = 80;
+  robotDrivetrain->driveDistance(-24);
+  robotDrivetrain->straightParameters.maxVelocity = 20;
+  robotDrivetrain->driveDistance(-7);
+  LeftMoGoPneumatic.set(true);
+  RightMoGoPneumatic.set(true);
+  ArmMotor.setVelocity(100,percent);
+  intakeMotor.setVelocity(100,percent);
+  intakeMotor.spin(forward);
+  ArmMotor.spin(forward);
+  wait(750, msec);
+  robotDrivetrain->turnToAngle(M_PI*.76);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->driveDistance(27);
+  wait(800, msec);
+  robotDrivetrain->straightParameters.maxVelocity = 17.5;
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->driveDistance(-21);
+  robotDrivetrain->turnToAngle(M_PI/2);
+  robotDrivetrain->driveDistance(26);
+  wait(200, msec);
+  robotDrivetrain->straightParameters.maxVelocity = 20;
+  robotDrivetrain->driveDistance(-6);
+  robotDrivetrain->turnToAngle(M_PI*.855);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->driveDistance(19.5);
+  wait(600, msec);
+  robotDrivetrain->driveDistance(-18);
+  robotDrivetrain->turnToAngle(-M_PI/2);
+  robotDrivetrain->driveDistance(55);
+  */
+  
+  robotDrivetrain->straightParameters.maxVelocity = 40;
+  robotDrivetrain->turnParameters.maxVelocity = 40;
+  robotDrivetrain->driveDistance(-17.75);
+  robotDrivetrain->turnToAngle(M_PI/2);
+  robotDrivetrain->driveDistance(-2.25);
+  LeftMoGoPneumatic.set(true);
+  RightMoGoPneumatic.set(true);
+  ArmMotor.setVelocity(100,percent);
+  intakeMotor.setVelocity(100,percent);
+  intakeMotor.spin(forward);
+  ArmMotor.spin(forward);
+  wait(550, msec);
+  intakeMotor.stop();
+  ArmMotor.stop();
+  LeftMoGoPneumatic.set(false);
+  RightMoGoPneumatic.set(false);
+  robotDrivetrain->driveDistance(3);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->turnParameters.maxVelocity = 40;
+  robotDrivetrain->turnToAngle(-M_PI*.69);
+  robotDrivetrain->turnParameters.maxVelocity = 10;
+  robotDrivetrain->turnToAngle(-M_PI*.69);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->driveDistance(-34);
+  robotDrivetrain->straightParameters.maxVelocity = 35;
+  robotDrivetrain->turnParameters.maxVelocity = 50;
+  robotDrivetrain->driveDistance(-12);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  LeftMoGoPneumatic.set(true);
+  RightMoGoPneumatic.set(true);
+  wait(100, msec);
+  robotDrivetrain->turnToAngle(M_PI*.285);
+  ArmMotor.setVelocity(100,percent);
+  intakeMotor.setVelocity(100,percent);
+  intakeMotor.spin(forward);
+  ArmMotor.spin(forward);
+  robotDrivetrain->straightParameters.maxVelocity = 80;
+  robotDrivetrain->driveDistance(27);
+  wait(400, msec);
+  robotDrivetrain->straightParameters.maxVelocity = 30;
+  robotDrivetrain->driveDistance(-22);
+  robotDrivetrain->straightParameters.maxVelocity = 80;
+  robotDrivetrain->turnToAngle(0);
+  robotDrivetrain->driveDistance(28);
+  wait(500, msec);
+  robotDrivetrain->turnToAngle(M_PI);
+  robotDrivetrain->turnParameters.maxVelocity = 5;
+  robotDrivetrain->turnToAngle(M_PI);
+  robotDrivetrain->straightParameters.maxVelocity = 80;
+  robotDrivetrain->driveDistance(60);
+  /*
+  
+  robotDrivetrain->straightParameters.maxVelocity = 40;
+  robotDrivetrain->turnParameters.maxVelocity = 40;
+  robotDrivetrain->driveDistance(-17.5);
+  robotDrivetrain->turnToAngle(M_PI/2);
+  robotDrivetrain->driveDistance(-2);
+  LeftMoGoPneumatic.set(true);
+  RightMoGoPneumatic.set(true);
+  ArmMotor.setVelocity(100,percent);
+  intakeMotor.setVelocity(100,percent);
+  intakeMotor.spin(forward);
+  ArmMotor.spin(forward);
+  wait(650, msec);
+  intakeMotor.stop();
+  ArmMotor.stop();
+  LeftMoGoPneumatic.set(false);
+  RightMoGoPneumatic.set(false);
+  robotDrivetrain->driveDistance(3.3);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->turnParameters.maxVelocity = 80;
+  robotDrivetrain->turnToAngle(-M_PI*.665);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->driveDistance(-40);
+  robotDrivetrain->straightParameters.maxVelocity = 35;
+  robotDrivetrain->driveDistance(-9);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  LeftMoGoPneumatic.set(true);
+  RightMoGoPneumatic.set(true);
+  wait(100, msec);
+  robotDrivetrain->turnToAngle(M_PI*.26);
+  ArmMotor.setVelocity(100,percent);
+  intakeMotor.setVelocity(100,percent);
+  intakeMotor.spin(forward);
+  ArmMotor.spin(forward);
+  robotDrivetrain->straightParameters.maxVelocity = 80;
+  robotDrivetrain->driveDistance(28);
+  wait(200, msec);
+  robotDrivetrain->straightParameters.maxVelocity = 17.5;
+  robotDrivetrain->straightParameters.maxVelocity = 80;
+  robotDrivetrain->driveDistance(-26);
+  robotDrivetrain->turnToAngle(0);
+  robotDrivetrain->driveDistance(28);
+  robotDrivetrain->straightParameters.maxVelocity = 30;
+  robotDrivetrain->driveDistance(-7);
+  robotDrivetrain->turnToAngle(M_PI*.37);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->driveDistance(19);
+  wait(400, msec);
+  robotDrivetrain->driveDistance(-26);
+  robotDrivetrain->turnToAngle(M_PI);
+  robotDrivetrain->driveDistance(54);
+  */
 }
 
 /* --------------- Start driver control ---------------*/
@@ -726,8 +936,8 @@ void driverControl(Drive* robotDrivetrain, motor &intakeMotor, digital_out &inta
     }*/
 
     // Arm
-    bool bDown = robotDrivetrain->remoteControl->ButtonDown.pressing();
-    bool bUp = robotDrivetrain->remoteControl->ButtonUp.pressing();
+    bool bDown = robotDrivetrain->remoteControl->ButtonR1.pressing();
+    bool bUp = robotDrivetrain->remoteControl->ButtonR2.pressing();
     
     int armSpinDirection = bUp - bDown;
 
