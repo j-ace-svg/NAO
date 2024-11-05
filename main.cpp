@@ -188,9 +188,9 @@ class Odometry {
         orientGlobalDrift += orientGlobal - oldOrientGlobal;
       }
 
-      Brain.Screen.clearScreen();
-      Brain.Screen.setCursor(1, 1);
-      Brain.Screen.print("Orientation: %f", inertialSensor->rotation(turns));
+      //Brain.Screen.clearScreen();
+      //Brain.Screen.setCursor(1, 1);
+      //Brain.Screen.print("Orientation: %f", inertialSensor->rotation(turns));
 
       // Calculate odometry
       //oldGlobalPosition = globalPosition;
@@ -347,6 +347,8 @@ class PID {
     float settleThreshold;
     float settleTime;
     float timeSettled;
+    float lastScaledProp = 0;
+    float lastScaledDeriv = 0;
 
   //public:
 
@@ -377,11 +379,13 @@ class PID {
       // Derivative
       float deltaError = (error - previousError) / deltaTime;
       previousError = error;
+      lastScaledDeriv = deltaError * kd;
+      lastScaledProp = kp * error;
 
       // Output
       float outputPower = kp * error + ki * accumulatedError + kd * deltaError;
-      if (fabs(error) < settleThreshold) timeSettled += DT;
-      timeRunning += DT;
+      if (fabs(error) < settleThreshold) timeSettled += deltaTime / 1000;
+      timeRunning += deltaTime / 1000;
       return outputPower;
     }
 };
@@ -566,7 +570,8 @@ class Drive {
       float deltaTime = odom->getDeltaTime();
       float turnMotorVelocity = turnPID->calculateNextStep(turnError, deltaTime);
       //remoteControl->Screen.newLine();
-      remoteControl->Screen.print("OG Velocity: %f", turnMotorVelocity);
+      remoteControl->Screen.print("Scaled prop: %f", turnPID->lastScaledProp);
+      remoteControl->Screen.print("Scaled deriv: %f", turnPID->lastScaledDeriv);
 
       turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
       //remoteControl->Screen.newLine();
