@@ -76,7 +76,9 @@ void playVexcodeSound(const char *soundName) {
 // Included libraries (some redundent because of config block)
 #include <math.h>
 #include <array>
+#include <string>
 using std::array;
+using std::string;
   
 // Allows for easier use of the VEX Library
 using namespace vex;
@@ -580,9 +582,9 @@ class Drive {
       float deltaTime = odom->getDeltaTime();
       float turnMotorVelocity = turnPID->calculateNextStep(turnError, deltaTime);
       //remoteControl->Screen.newLine();
-      remoteControl->Screen.print("Scaled prop: %s", signToString(turnPID->lastScaledProp));
+      remoteControl->Screen.print("Scaled prop: %s", signToString(turnPID->lastScaledProp).c_str());
       remoteControl->Screen.newLine();
-      remoteControl->Screen.print("Scaled deriv: %s", signToString(turnPID->lastScaledDeriv));
+      remoteControl->Screen.print("Scaled deriv: %s", signToString(turnPID->lastScaledDeriv).c_str());
       remoteControl->Screen.newLine();
       remoteControl->Screen.print("DT: %f", deltaTime);
 
