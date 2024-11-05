@@ -384,8 +384,8 @@ class PID {
 
       // Output
       float outputPower = kp * error + ki * accumulatedError + kd * deltaError;
-      if (fabs(error) < settleThreshold) timeSettled += deltaTime / 1000;
-      timeRunning += deltaTime / 1000;
+      if (fabs(error) < settleThreshold) timeSettled += deltaTime * 1000;
+      timeRunning += deltaTime * 1000;
       return outputPower;
     }
 };
@@ -555,6 +555,16 @@ class Drive {
     driveVelocity(0);
   }
 
+  string signToString(float val) {
+    if (val > 0) {
+      return "+";
+    } else if (val < 0) {
+      return "-";
+    } else {
+      return "0";
+    }
+  }
+
   // Drivetrain autonomous functions
   void turnToAngle(float targetAngle) {
     float turnSetPoint = targetAngle;
@@ -570,9 +580,11 @@ class Drive {
       float deltaTime = odom->getDeltaTime();
       float turnMotorVelocity = turnPID->calculateNextStep(turnError, deltaTime);
       //remoteControl->Screen.newLine();
-      remoteControl->Screen.print("Scaled prop: %f", turnPID->lastScaledProp);
+      remoteControl->Screen.print("Scaled prop: %s", signToString(turnPID->lastScaledProp));
       remoteControl->Screen.newLine();
-      remoteControl->Screen.print("Scaled deriv: %f", turnPID->lastScaledDeriv);
+      remoteControl->Screen.print("Scaled deriv: %s", signToString(turnPID->lastScaledDeriv));
+      remoteControl->Screen.newLine();
+      remoteControl->Screen.print("DT: %f", deltaTime);
 
       turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
       //remoteControl->Screen.newLine();
