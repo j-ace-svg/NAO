@@ -660,7 +660,7 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out 
     float rightRotation = robotDrivetrain->odom->getDeltaRightAngle();
     float robotOrientation = robotDrivetrain->odom->getOrientation();
     float arcRadius = robotDrivetrain->odom->getPathArcRadius();
-    Brain.Screen.print("X coordinate: %f", xCoordinate);
+    /*Brain.Screen.print("X coordinate: %f", xCoordinate);
     Brain.Screen.newLine();
     Brain.Screen.print("Y coordinate: %f", yCoordinate);
     Brain.Screen.newLine();
@@ -671,8 +671,8 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out 
     Brain.Screen.print("Orientation: %f", robotOrientation);
     Brain.Screen.newLine();
     Brain.Screen.print("Arc Radius: %f", arcRadius);
-    Brain.Screen.newLine();
-    Brain.Screen.print("DT: %f", robotDrivetrain->odom->getDeltaTime());
+    Brain.Screen.newLine();*/
+    robotDrivetrain->remoteControl->Screen.print("DT: %f", robotDrivetrain->odom->getDeltaTime());
 
 
 
