@@ -525,7 +525,7 @@ class Drive {
 
   // Drivetrain autonomous functions
   void odometryStep() {
-    wait(DT, msec);
+    //wait(DT, msec);
     odom->pollSensorValues();
   }
   
@@ -644,6 +644,7 @@ float RightWheelRadius = 1.625;
 odomParameters StraightParameters = {5, 0, 0, 0, 0.25, 0.25, 80};
 //odomParameters TurnParameters = {14.6, 0.029, 7.5, M_PI / 2, 0.015, 0.1, 100}; // kU = 34, pU = 1.398
 odomParameters TurnParameters = {18.375, 0.005, 10, M_PI / 2, 0.015, 0.015, 100}; // kU = 34, pU = 1.398
+odomParameters TurnMoGoParameters = {18.375, 0.005, 10, M_PI / 2, 0.015, 0.015, 100};
 odomParameters HeadingParameters = {0, 0, 0, 0, 0, 0.1, 100};
 
 /* --------------- Start autons --------------- */
@@ -671,9 +672,7 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out 
     Brain.Screen.newLine();
     Brain.Screen.print("Arc Radius: %f", arcRadius);
     Brain.Screen.newLine();
-    Brain.Screen.print("X: %f", globalPosition.x);
-    Brain.Screen.newLine();
-    Brain.Screen.print("Y: %f", globalPosition.y);
+    Brain.Screen.print("DT: %f", robotDrivetrain->odom->getDeltaTime());
 
 
 
@@ -1070,7 +1069,7 @@ void templateAutonomous(void) { // Dummy wrapper function to call the desired au
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, HeadingParameters);
 
-  turn90Degrees(robotDrivetrain, IntakeBeltMotor, IntakePneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+  odomDebugAuton(robotDrivetrain, IntakeBeltMotor, IntakePneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
