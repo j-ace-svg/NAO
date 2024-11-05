@@ -571,6 +571,7 @@ class Drive {
       float turnMotorVelocity = turnPID->calculateNextStep(turnError, deltaTime);
       //remoteControl->Screen.newLine();
       remoteControl->Screen.print("Scaled prop: %f", turnPID->lastScaledProp);
+      remoteControl->Screen.newLine();
       remoteControl->Screen.print("Scaled deriv: %f", turnPID->lastScaledDeriv);
 
       turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
