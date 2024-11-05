@@ -368,14 +368,14 @@ class PID {
       return false;
     }
 
-    float calculateNextStep(float error) {
+    float calculateNextStep(float error, float deltaTime) {
       // Integral
-      accumulatedError = accumulatedError + error;
+      accumulatedError = accumulatedError + error * deltaTime;
       if (fabs(error) > integralRange) accumulatedError = 0; // Error outside of range for accumulating integral
       if (error == 0 || (error > 0 &&  previousError < 0) || (error < 0 && previousError > 0)) accumulatedError = 0; // Error crossed 0
 
       // Derivative
-      float deltaError = error - previousError;
+      float deltaError = (error - previousError) / deltaTime;
       previousError = error;
 
       // Output
@@ -534,12 +534,13 @@ class Drive {
       //remoteControl->Screen.setCursor(1,1);
       //remoteControl->Screen.print("Time settled: %f", turnPID->timeSettled);
       //remoteControl->Screen.print("Error: %f", distanceError);
-      float driveMotorVelocity = drivePID->calculateNextStep(distanceError);
+      float deltaTime = odom->getDeltaTime();
+      float driveMotorVelocity = drivePID->calculateNextStep(distanceError, deltaTime);
       
       driveMotorVelocity = clampStraightVelocity(driveMotorVelocity);
 
       float headingError = reduceAngleNegPiToPi(headingSetPoint - odom->getOrientation());
-      float headingMotorVelocity = headingPID->calculateNextStep(headingError);
+      float headingMotorVelocity = headingPID->calculateNextStep(headingError, deltaTime);
 
       headingMotorVelocity = clampHeadingVelocity(headingMotorVelocity);
       
@@ -559,12 +560,17 @@ class Drive {
       remoteControl->Screen.clearScreen();
       remoteControl->Screen.setCursor(1,1);
       //remoteControl->Screen.print("Time settled: %f", turnPID->timeSettled);
-      remoteControl->Screen.print("Error: %f", turnError);
-      remoteControl->Screen.newLine();
-      remoteControl->Screen.print("Orientation: %f", odom->getOrientation());
-      float turnMotorVelocity = turnPID->calculateNextStep(turnError);
+      //remoteControl->Screen.print("Error: %f", turnError);
+      //remoteControl->Screen.newLine();
+      //remoteControl->Screen.print("Orientation: %f", odom->getOrientation());
+      float deltaTime = odom->getDeltaTime();
+      float turnMotorVelocity = turnPID->calculateNextStep(turnError, deltaTime);
+      //remoteControl->Screen.newLine();
+      remoteControl->Screen.print("OG Velocity: %f", turnMotorVelocity);
 
       turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
+      //remoteControl->Screen.newLine();
+      //remoteControl->Screen.print("Velocity: %f", turnMotorVelocity);
       
       driveVelocity(turnMotorVelocity, -turnMotorVelocity);
 
@@ -616,7 +622,8 @@ float LeftWheelRadius = 1.625;
 float RightWheelRadius = 1.625;
 /* kp, ki, kd, integralRange, settleThreshold, settleTime, maxVelocity */
 odomParameters StraightParameters = {5, 0, 0, 0, 0.25, 0.25, 80};
-odomParameters TurnParameters = {15, 0.029, 10, M_PI / 2, 0.035, 0.2, 50}; // kU = 34, pU = 1.398
+//odomParameters TurnParameters = {14.6, 0.029, 7.5, M_PI / 2, 0.015, 0.1, 100}; // kU = 34, pU = 1.398
+odomParameters TurnParameters = {18.375, 0.005, 10, M_PI / 2, 0.015, 0.015, 100}; // kU = 34, pU = 1.398
 odomParameters HeadingParameters = {0, 0, 0, 0, 0, 0.1, 100};
 
 /* --------------- Start autons --------------- */
@@ -904,8 +911,68 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &in
   */
 }
 
+void testingAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &intakePneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+  robotDrivetrain->straightParameters.maxVelocity = 50;
+  robotDrivetrain->turnParameters.maxVelocity = 60;
+  robotDrivetrain->driveDistance(-17.75);
+  robotDrivetrain->turnToAngle(-M_PI/2);
+  robotDrivetrain->straightParameters.maxVelocity = 30;
+  robotDrivetrain->driveDistance(-2.25);
+  LeftMoGoPneumatic.set(true);
+  RightMoGoPneumatic.set(true);
+  IntakeRollerMotor.setVelocity(-100,percent);
+  intakeBeltMotor.setVelocity(100,percent);
+  intakeBeltMotor.spin(forward);
+  IntakeRollerMotor.spin(forward);
+  wait(500, msec);
+  intakeBeltMotor.stop();
+  IntakeRollerMotor.stop();
+  LeftMoGoPneumatic.set(false);
+  RightMoGoPneumatic.set(false);
+  robotDrivetrain->driveDistance(3);
+  robotDrivetrain->straightParameters.maxVelocity = 80;
+  robotDrivetrain->turnParameters.maxVelocity = 70;
+  robotDrivetrain->turnToAngle(M_PI*.69);
+  robotDrivetrain->straightParameters.maxVelocity = 75;
+  robotDrivetrain->driveDistance(-34);
+  robotDrivetrain->straightParameters.maxVelocity = 35;
+  robotDrivetrain->turnParameters.maxVelocity = 100;
+  robotDrivetrain->driveDistance(-12);
+  robotDrivetrain->straightParameters.maxVelocity = 90;
+  LeftMoGoPneumatic.set(true);
+  RightMoGoPneumatic.set(true);
+  wait(100, msec);
+  robotDrivetrain->turnToAngle(-M_PI*.2925);
+  IntakeRollerMotor.setVelocity(-100,percent);
+  intakeBeltMotor.setVelocity(100,percent);
+  intakeBeltMotor.spin(forward);
+  IntakeRollerMotor.spin(forward);
+  robotDrivetrain->straightParameters.maxVelocity = 80;
+  robotDrivetrain->driveDistance(29.5);
+  wait(400, msec);
+  robotDrivetrain->straightParameters.maxVelocity = 30;
+  robotDrivetrain->driveDistance(-22);
+  robotDrivetrain->straightParameters.maxVelocity = 80;
+  robotDrivetrain->turnToAngle(0);
+  robotDrivetrain->driveDistance(28);
+  robotDrivetrain->turnToAngle(-M_PI/2);
+  robotDrivetrain->straightParameters.maxVelocity = 80;
+  robotDrivetrain->driveDistance(16);
+   wait(400, msec);
+  robotDrivetrain->driveDistance(-16);
+  robotDrivetrain->turnToAngle(0);
+  robotDrivetrain->straightParameters.maxVelocity = 80;
+  robotDrivetrain->driveDistance(60);
+
+  
+
+}
+
 void turn90Degrees(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &intakePneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+  robotDrivetrain->turnParameters.maxVelocity = 100;
   robotDrivetrain->turnToAngleDegrees(90);
+  robotDrivetrain->straightParameters.maxVelocity = 60;
+  robotDrivetrain->driveDistance(6);
 }
 
 /* --------------- Start driver control ---------------*/
@@ -939,8 +1006,8 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &
     }*/
 
     // Arm
-    bool bDown = robotDrivetrain->remoteControl->ButtonR1.pressing();
-    bool bUp = robotDrivetrain->remoteControl->ButtonR2.pressing();
+    bool bDown = robotDrivetrain->remoteControl->ButtonR2.pressing();
+    bool bUp = robotDrivetrain->remoteControl->ButtonR1.pressing();
     
     int armSpinDirection = bUp - bDown;
 
