@@ -651,8 +651,8 @@ odomParameters HeadingParameters = {0, 0, 0, 0, 0, 0.1, 100};
 
 void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &intakePneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   while (true) {
-    Brain.Screen.clearScreen();
-    Brain.Screen.setCursor(1, 1);
+    robotDrivetrain->remoteControl->Screen.clearScreen();
+    robotDrivetrain->remoteControl->Screen.setCursor(1, 1);
     coordinate globalPosition = robotDrivetrain->odom->getGlobalPosition();
     float xCoordinate = globalPosition.x;
     float yCoordinate = globalPosition.y;
