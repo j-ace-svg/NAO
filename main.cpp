@@ -76,6 +76,7 @@ void playVexcodeSound(const char *soundName) {
 // Included libraries (some redundent because of config block)
 #include <math.h>
 #include <array>
+#include <utility>
 using std::array;
   
 // Allows for easier use of the VEX Library
@@ -590,7 +591,7 @@ class Drive {
   void driveArcDistance(float ang, float dist) {
     float driveSetPoint = dist + (odom->getLeftDistance() + odom->getRightDistance()) / 2;
     PID* drivePID = new PID(dist, straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange, straightParameters.settleThreshold, straightParameters.settleTime);
-    float headingSetPoint = odom->getOrientation() + ang;
+    float turnSetPoint = odom->getOrientation() + ang;
     PID* turnPID = new PID(0, turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
     while (!turnPID->isSettled()) {
       float distanceError = driveSetPoint - (odom->getLeftDistance() + odom->getRightDistance()) / 2;
@@ -622,7 +623,8 @@ class Drive {
     // s = r * theta
     float dist = radius * ang;
 
-    driveArcDistance(ang, dist)
+    driveArcDistance(ang, dist);
+  }
 };
 
 #pragma endregion Custom Drive Library
@@ -1110,9 +1112,53 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &
 
 /* --------------- Start auton selector --------------- */
 
+typedef void (*AutonFunction)(Drive*, motor&, digital_out&, motor&, digital_out&, digital_out&);
 
+typedef struct {
+  const char* name;
+  AutonFunction func;
+} AutonSelectorOption;
+
+array<AutonSelectorOption, 5> autonMap = {{
+  { "Odometry Debugging", &odomDebugAuton },
+  { "Red Low Ally", &redLowAlly },
+  { "Blue Low Ally", &blueLowAlly },
+  { "Solo High Red", &soloHighRed },
+  { "Skills", &bigSkills }
+}};
+
+AutonFunction SelectedAuton = autonMap[0].func;
 
 void autonSelector() {
+  int autonIndex = 0;
+  int numAutons = autonMap.size();
+  bool selected = false;
+  while (!selected) {
+    if (!Brain.Screen.pressing()) {
+      wait(DT, msec);
+      continue;
+    }
+
+    // Screen width is 480 pixels
+    int touchHorizontalCoordinate = Brain.Screen.xPosition();
+    if (touchHorizontalCoordinate > 480 / 2) {
+      autonIndex += 1;
+      if (autonIndex >= numAutons) {
+        autonIndex = 0;
+      }
+    } else {
+      autonIndex -= 1;
+      if (autonIndex < 0) {
+        autonIndex = numAutons - 1;
+      }
+    }
+
+    Brain.Screen.clearScreen();
+    Brain.Screen.print(autonMap[autonIndex].name);
+    SelectedAuton = autonMap[autonIndex].func;
+
+    wait(DT, msec);
+  }
 
 }
 
@@ -1124,13 +1170,15 @@ void preAutonomous(void) {
   Brain.Screen.print("pre auton code");
   InertialSensor.calibrate();
   wait(3, seconds);
+  
+  autonSelector();
 }
 
 void templateAutonomous(void) { // Dummy wrapper function to call the desired autonomous (because the competition template can't take parameters)
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, HeadingParameters);
 
-  red4RingSkills(robotDrivetrain, IntakeBeltMotor, ArmPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+  SelectedAuton(robotDrivetrain, IntakeBeltMotor, ArmPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
