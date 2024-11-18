@@ -590,7 +590,7 @@ class Drive {
   void driveArcDistance(float ang, float dist) {
     float driveSetPoint = dist + (odom->getLeftDistance() + odom->getRightDistance()) / 2;
     PID* drivePID = new PID(dist, straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange, straightParameters.settleThreshold, straightParameters.settleTime);
-    float headingSetPoint = odom->getOrientation();
+    float headingSetPoint = odom->getOrientation() + ang;
     PID* turnPID = new PID(0, turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
     while (!turnPID->isSettled()) {
       float distanceError = driveSetPoint - (odom->getLeftDistance() + odom->getRightDistance()) / 2;
