@@ -71,7 +71,7 @@ void playVexcodeSound(const char *soundName) {
 /*----------------------------------------------------------------------------*/
 
 // Include the V5 Library
-#include "vex.h"
+#include "vex.h
 
 // Included libraries (some redundent because of config block)
 #include <math.h>
@@ -420,6 +420,7 @@ class Drive {
     Odometry* odom;
     odomParameters straightParameters = {0, 0, 0, 0, 0, 0, 0};
     odomParameters turnParameters = {0, 0, 0, 0, 0, 0, 0};
+    odomParameters arcParameters = {0, 0, 0, 0, 0, 0, 0};
     odomParameters headingParameters = {0, 0, 0, 0, 0, 0, 0};
 
   Drive(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, controller &_remoteControl) {
@@ -438,11 +439,12 @@ class Drive {
     remoteControl = &_remoteControl;
   }
 
-  void initOdom(float inertialDriftEpsilon, float distLeft, float distRight, float distBack, float leftWheelRadius, float rightWheelRadius, odomParameters _straightParameters, odomParameters _turnParameters, odomParameters _headingParameters) {
+  void initOdom(float inertialDriftEpsilon, float distLeft, float distRight, float distBack, float leftWheelRadius, float rightWheelRadius, odomParameters _straightParameters, odomParameters _turnParameters, odomParameters _arcParameters, odomParameters _headingParameters) {
     odom = new Odometry(*leftDrive, *rightDrive, *inertialSensor, inertialDriftEpsilon, distLeft, distRight, distBack, leftWheelRadius, rightWheelRadius);
     odom->initSensorValues();
     straightParameters = _straightParameters;
     turnParameters = _turnParameters;
+    arcParameters = _arcParameters;
     headingParameters = _headingParameters;
   }
 
@@ -489,6 +491,16 @@ class Drive {
   }
 
   float clampTurnVelocity(float motorVelocity) {
+    if (motorVelocity > turnParameters.maxVelocity) {
+      return turnParameters.maxVelocity;
+    } else if (motorVelocity < -turnParameters.maxVelocity) {
+      return -turnParameters.maxVelocity;
+    } else {
+      return motorVelocity;
+    }
+  }
+
+  float clampArcVelocity(float motorVelocity) {
     if (motorVelocity > turnParameters.maxVelocity) {
       return turnParameters.maxVelocity;
     } else if (motorVelocity < -turnParameters.maxVelocity) {
@@ -588,7 +600,7 @@ class Drive {
     turnToAngle(degreesToRadians(targetAngleDegrees));
   }
   
-  void driveArcDistance(float ang, float dist) {
+  void driveLazyArcDistance(float ang, float dist) {
     float driveSetPoint = dist + (odom->getLeftDistance() + odom->getRightDistance()) / 2;
     PID* drivePID = new PID(dist, straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange, straightParameters.settleThreshold, straightParameters.settleTime);
     float turnSetPoint = odom->getOrientation() + ang;
@@ -619,11 +631,43 @@ class Drive {
     driveVelocity(0);
   }
   
-  void driveArcRadius(float ang, float radius) {
+  void driveLazyArcRadius(float ang, float radius) {
     // s = r * theta
     float dist = radius * ang;
 
-    driveArcDistance(ang, dist);
+    driveLazyArcDistance(ang, dist);
+  }
+
+  void driveArcRadius(float ang, float radius) {
+    float arcDistLeft = (radius + odom->distLeft) * ang;
+    float arcDistRight = (radius - odom->distRight) * ang;
+
+    float speedProportionLeft = 1;
+    float speedProportionRight = 1;
+    float angSign = (ang > 0) - (ang < 0);
+    if (fabs(arcDistLeft) > fabs(arcDistRight)) {
+      speedProportionLeft = arcDistLeft / fabs(arcDistLeft) * angSign;
+      speedProportionRight = arcDistRight / fabs(arcDistLeft) * angSign;
+    } else {
+      speedProportionLeft = arcDistLeft / fabs(arcDistRight) * angSign;
+      speedProportionRight = arcDistRight / fabs(arcDistRight) * angSign;
+    }
+
+    float turnRate = fabs(speedProportionLeft - speedProportionRight) / 2;
+
+    float arcSetPoint = odom->getOrientation() + ang;
+    PID* arcPID = new PID(0, arcParameters.kp, arcParameters.ki, arcParameters.kd, arcParameters.integralRange, arcParameters.settleThreshold, arcParameters.settleTime);
+    while (!arcPID->isSettled()) {
+      float arcError = reduceAngleNegPiToPi(arcSetPoint - odom->getOrientation());
+      float arcMotorVelocity = arcPID->calculateNextStep(arcError) / turnRate;
+
+      arcMotorVelocity = clampArcVelocity(arcMotorVelocity);
+      
+      driveVelocity(speedProportionLeft * arcMotorVelocity, speedProportionRight * arcMotorVelocity);
+
+      odometryStep();
+    }
+    driveVelocity(0);
   }
 };
 
@@ -667,6 +711,7 @@ float RightWheelRadius = 1.625;
 /* kp, ki, kd, integralRange, settleThreshold, settleTime, maxVelocity */
 odomParameters StraightParameters = {5, 0, 0, 0, 0.25, 0.25, 80};
 odomParameters TurnParameters = {26.2, 0.009, 40, M_PI / 2, 0.035, 0.2, 50}; // kU = 34, pU = 1.398
+odomParameters ArcParameters = {26.2, 0.009, 40, M_PI / 2, 0.035, 0.2, 50}; // Starting with copy/paste of TurnParameters
 odomParameters HeadingParameters = {40, 0.020, 40, M_PI / 2, 0.035, 0.2, 0};
 
 /* --------------- Start autons --------------- */
@@ -1176,14 +1221,14 @@ void preAutonomous(void) {
 
 void templateAutonomous(void) { // Dummy wrapper function to call the desired autonomous (because the competition template can't take parameters)
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
-  robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, HeadingParameters);
+  robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
 
   SelectedAuton(robotDrivetrain, IntakeBeltMotor, ArmPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
-  robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, HeadingParameters);
+  robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
 
   driverControl(robotDrivetrain, IntakeBeltMotor, ArmPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
