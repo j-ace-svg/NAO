@@ -71,7 +71,7 @@ void playVexcodeSound(const char *soundName) {
 /*----------------------------------------------------------------------------*/
 
 // Include the V5 Library
-#include "vex.h
+#include "vex.h"
 
 // Included libraries (some redundent because of config block)
 #include <math.h>
@@ -676,24 +676,32 @@ class Drive {
 /* --------------- Start robot configuration --------------- */
 
 // Drivetrain
-motor LeftDriveMotorFront = motor(PORT1, ratio6_1, true);
-motor LeftDriveMotorMiddle = motor(PORT2, ratio6_1, true);
-motor LeftDriveMotorBack = motor(PORT3, ratio6_1, true);
+motor LeftDriveMotorFront = motor(PORT4, ratio6_1, true);
+motor LeftDriveMotorMiddle = motor(PORT3, ratio6_1, true);
+motor LeftDriveMotorBack = motor(PORT2, ratio6_1, true);
 motor_group LeftDrive = motor_group(LeftDriveMotorFront, LeftDriveMotorMiddle, LeftDriveMotorBack);
 
-motor RightDriveMotorFront = motor(PORT4, ratio6_1, false);
-motor RightDriveMotorMiddle = motor(PORT5, ratio6_1, false);
-motor RightDriveMotorBack = motor(PORT6, ratio6_1, false);
+motor RightDriveMotorFront = motor(PORT7, ratio6_1, false);
+motor RightDriveMotorMiddle = motor(PORT8, ratio6_1, false);
+motor RightDriveMotorBack = motor(PORT9, ratio6_1, false);
 motor_group RightDrive = motor_group(RightDriveMotorFront, RightDriveMotorMiddle, RightDriveMotorBack);
 
-inertial InertialSensor = inertial(PORT7);
+inertial InertialSensor = inertial(PORT5);
+
 
 // Intake
-motor IntakeRollerMotor = motor(PORT10, ratio36_1, true);
-motor IntakeBeltMotor = motor(PORT9, ratio36_1, true);
+motor IntakeRollerMotor = motor(PORT6, ratio36_1, false);
+motor IntakeBeltMotor = motor(PORT10, ratio36_1, true);
 
 // Arm
-digital_out ArmPneumatic = digital_out(Brain.ThreeWirePort.F);
+motor ArmMotor = motor(PORT19, ratio18_1, false);
+rotation ArmRotationSensor = rotation(PORT1, false);
+
+// Doinker
+digital_out DoinkerPneumatic = digital_out(Brain.ThreeWirePort.F);
+
+// Descorer
+digital_out DescorerPneumatic = digital_out(Brain.ThreeWirePort.A);
 
 // MoGo Mech
 digital_out LeftMoGoPneumatic = digital_out(Brain.ThreeWirePort.G);
@@ -716,7 +724,7 @@ odomParameters HeadingParameters = {40, 0.020, 40, M_PI / 2, 0.035, 0.2, 0};
 
 /* --------------- Start autons --------------- */
 
-void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &armPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   while (true) {
     Brain.Screen.clearScreen();
     Brain.Screen.setCursor(1, 1);
@@ -749,7 +757,7 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out 
   }
 }
 
-void redLowAlly(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &armPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void redLowAlly(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->straightParameters.maxVelocity = 35;
   robotDrivetrain->turnParameters.maxVelocity = 40;
   robotDrivetrain->driveDistance(-17.3);
@@ -788,7 +796,7 @@ void redLowAlly(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &arm
   robotDrivetrain->turnToAngle(M_PI*1.075);
 }
 
-void blueLowAlly(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &armPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void blueLowAlly(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->straightParameters.maxVelocity = 35;
   robotDrivetrain->turnParameters.maxVelocity = 40;
   robotDrivetrain->driveDistance(-17.3);
@@ -827,7 +835,7 @@ void blueLowAlly(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &ar
   robotDrivetrain->turnToAngle(M_PI);
 }
 
-void soloHighRed(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &armPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void soloHighRed(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   /* Demo functions:
      Drive forward: robotDrivetrain->driveDistance({distance});
      Turn to angle: robotDrivetrain->turnToAngle({angle});
@@ -999,7 +1007,7 @@ void soloHighRed(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &ar
   */
 }
 
-void oldRed4RingSkills(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &armPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void oldRed4RingSkills(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->straightParameters.maxVelocity = 80;
   robotDrivetrain->turnParameters.maxVelocity = 80;
   robotDrivetrain->driveDistance(-24);
@@ -1050,7 +1058,7 @@ void oldRed4RingSkills(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_o
   
 }
 
-void bigSkills(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &armPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void bigSkills(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->odom->resetOrientation(); // Start using this in autons to set the starting angle, this will just make the starting angle 0
   intakeBeltMotor.setVelocity(100, percent);
   intakeRollerMotor.setVelocity(100, percent);
@@ -1082,7 +1090,7 @@ void bigSkills(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &armP
   
 }
 
-void straightDebug(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &armPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void straightDebug(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->odom->resetOrientation(); // Start using this in autons to set the starting angle, this will just make the starting angle 0
 
   Brain.Screen.clearScreen();
@@ -1099,7 +1107,7 @@ void straightDebug(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &
 
 /* --------------- Start driver control ---------------*/
 
-void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &armPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->leftDrive->stop(coast);
   robotDrivetrain->rightDrive->stop(coast);
   while (true) {
@@ -1123,9 +1131,9 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &
     int intakeState = x - b;
 
     if (intakeState == 1) {
-      armPneumatic.set(true);
+      doinkerPneumatic.set(true);
     } else if (intakeState == -1) {
-      armPneumatic.set(false);
+      doinkerPneumatic.set(false);
     }
 
     // Arm
@@ -1133,6 +1141,9 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &
     bool bUp = robotDrivetrain->remoteControl->ButtonR2.pressing();
     
     int armSpinDirection = bUp - bDown;
+
+    armMotor.setVelocity(100 * (float) armSpinDirection, percent);
+    armMotor.spin(forward);
 
     intakeRollerMotor.setVelocity(100 * (float) armSpinDirection, percent);
     intakeRollerMotor.spin(reverse);
@@ -1157,7 +1168,7 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, digital_out &
 
 /* --------------- Start auton selector --------------- */
 
-typedef void (*AutonFunction)(Drive*, motor&, digital_out&, motor&, digital_out&, digital_out&);
+typedef void (*AutonFunction)(Drive*, motor&, motor&, rotation&, digital_out&, digital_out&, motor&, digital_out&, digital_out&);
 
 typedef struct {
   const char* name;
@@ -1223,14 +1234,14 @@ void templateAutonomous(void) { // Dummy wrapper function to call the desired au
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
 
-  SelectedAuton(robotDrivetrain, IntakeBeltMotor, ArmPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+  SelectedAuton(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
 
-  driverControl(robotDrivetrain, IntakeBeltMotor, ArmPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+  driverControl(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 int main() {
