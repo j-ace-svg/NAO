@@ -1182,7 +1182,8 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
         armPID->accumulatedError = 0;
       }
     }
-    Brain.Screen.clear();
+    Brain.Screen.clearScreen();
+    Brain.Screen.setCursor(1, 1);
     Brain.Screen.print("Arm pos: %f", armRotationSensor.position(degrees));
 
     float armVelocity = armPID->calculateNextStep(armTargetAngle - armRotationSensor.position(degrees));
