@@ -1141,6 +1141,8 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
     bool bUp = robotDrivetrain->remoteControl->ButtonR2.pressing();
     
     int armSpinDirection = bUp - bDown;
+    Brain.Screen.clearScreen();
+    Brain.Screen.print("%d", armSpinDirection);
 
     armMotor.setVelocity(100 * (float) armSpinDirection, percent);
     armMotor.spin(forward);
