@@ -1121,7 +1121,9 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
 
     intakeBeltMotor.setVelocity(100 * (float) intakeSpinDirection, percent);
     intakeBeltMotor.spin(forward);
-  
+
+    intakeRollerMotor.setVelocity(100 * (float) intakeSpinDirection, percent);
+    intakeRollerMotor.spin(reverse);
 
     
     bool x = robotDrivetrain->remoteControl->ButtonX.pressing();
@@ -1141,15 +1143,9 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
     bool bUp = robotDrivetrain->remoteControl->ButtonUp.pressing();
     
     int armSpinDirection = bUp - bDown;
-    Brain.Screen.clearScreen();
-    Brain.Screen.setCursor(1, 1);
-    Brain.Screen.print("Dir: %f", armSpinDirection);
 
     armMotor.setVelocity(100 * (float) armSpinDirection, percent);
     armMotor.spin(forward);
-
-    intakeRollerMotor.setVelocity(100 * (float) armSpinDirection, percent);
-    intakeRollerMotor.spin(reverse);
 
     // MoGo Mech
     bool l1 = robotDrivetrain->remoteControl->ButtonL1.pressing();
