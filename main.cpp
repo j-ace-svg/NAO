@@ -354,6 +354,7 @@ class PID {
     float settleThreshold;
     float settleTime;
     float timeSettled;
+    bool preserveIntegral;
 
   //public:
 
@@ -368,6 +369,21 @@ class PID {
       previousError = startError;
       timeRunning = 0;
       timeSettled = 0;
+      preserveIntegral = false;
+    }
+
+    PID(float startError, float _kp, float _ki, float _kd, float _integralRange, float _settleThreshold, float _settleTime, bool _preserveIntegral) {
+      kp = _kp;
+      ki = _ki;
+      kd = _kd;
+      integralRange = _integralRange;
+      settleThreshold = _settleThreshold;
+      settleTime = _settleTime;
+      accumulatedError = 0;
+      previousError = startError;
+      timeRunning = 0;
+      timeSettled = 0;
+      preserveIntegral = _preserveIntegral;
     }
 
     bool isSettled() {
@@ -379,7 +395,7 @@ class PID {
       // Integral
       accumulatedError = accumulatedError + error;
       if (fabs(error) > integralRange) accumulatedError = 0; // Error outside of range for accumulating integral
-      if (error == 0 || (error > 0 &&  previousError < 0) || (error < 0 && previousError > 0)) accumulatedError = 0; // Error crossed 0
+      if (!preserveIntegral && (error == 0 || (error > 0 &&  previousError < 0) || (error < 0 && previousError > 0))) accumulatedError = 0; // Error crossed 0
 
       // Derivative
       float deltaError = error - previousError;
@@ -721,6 +737,8 @@ odomParameters StraightParameters = {5, 0, 0, 0, 0.25, 0.25, 80};
 odomParameters TurnParameters = {26.2, 0.009, 40, M_PI / 2, 0.035, 0.2, 50}; // kU = 34, pU = 1.398
 odomParameters ArcParameters = {26.2, 0.009, 40, M_PI / 2, 0.035, 0.2, 50}; // Starting with copy/paste of TurnParameters
 odomParameters HeadingParameters = {40, 0.020, 40, M_PI / 2, 0.035, 0.2, 0};
+
+odomParameters ArmParameters = {0, 0, 0, 0, 0, 0, 0};
 
 /* --------------- Start autons --------------- */
 
@@ -1110,6 +1128,10 @@ void straightDebug(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
 void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->leftDrive->stop(coast);
   robotDrivetrain->rightDrive->stop(coast);
+
+  armRotationSensor.setPosition(10, degrees);
+  float armTargetAngle = 10;
+  PID* armPID = new PID(armTargetAngle - armRotationSensor.position(degrees), ArmParameters.kp, ArmParameters.ki, ArmParameters.kd, ArmParameters.integralRange, ArmParameters.settleThreshold, ArmParameters.settleTime, true);
   while (true) {
     robotDrivetrain->driverControl();
 
@@ -1126,25 +1148,44 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
     intakeRollerMotor.spin(reverse);
 
     
-    bool x = robotDrivetrain->remoteControl->ButtonX.pressing();
-    bool b = robotDrivetrain->remoteControl->ButtonB.pressing();
+    bool bLeft = robotDrivetrain->remoteControl->ButtonLeft.pressing();
+    bool bRight = robotDrivetrain->remoteControl->ButtonRight.pressing();
     
     
-    int intakeState = x - b;
+    int doinkerState = bLeft - bRight;
 
-    if (intakeState == 1) {
+    if (doinkerState == 1) {
       doinkerPneumatic.set(true);
-    } else if (intakeState == -1) {
+    } else if (doinkerState == -1) {
       doinkerPneumatic.set(false);
     }
 
     // Arm
-    bool bDown = robotDrivetrain->remoteControl->ButtonDown.pressing();
-    bool bUp = robotDrivetrain->remoteControl->ButtonUp.pressing();
+    bool a = robotDrivetrain->remoteControl->ButtonA.pressing();
+    bool b = robotDrivetrain->remoteControl->ButtonB.pressing();
+    bool x = robotDrivetrain->remoteControl->ButtonX.pressing();
+    bool y = robotDrivetrain->remoteControl->ButtonY.pressing();
     
-    int armSpinDirection = bUp - bDown;
+    int armButtonCount = a + b + x + y;
+    if (armButtonCount == 1) {
+      if (x && armTargetAngle != 10) {
+        armTargetAngle = 10;
+        armPID->accumulatedError = 0;
+      } else if (a && armTargetAngle != 30) {
+        armTargetAngle = 30;
+        armPID->accumulatedError = 0;
+      } else if (b && armTargetAngle != 45) {
+        armTargetAngle = 45;
+        armPID->accumulatedError = 0;
+      } else if (y && armTargetAngle != 170) {
+        armTargetAngle = 170;
+        armPID->accumulatedError = 0;
+      }
+    }
 
-    armMotor.setVelocity(100 * (float) armSpinDirection, percent);
+    float armVelocity = armPID->calculateNextStep(armTargetAngle - armRotationSensor.position(degrees));
+
+    armMotor.setVelocity(100 * armVelocity, percent);
     armMotor.spin(forward);
 
     // MoGo Mech
