@@ -1129,8 +1129,8 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
   robotDrivetrain->leftDrive->stop(coast);
   robotDrivetrain->rightDrive->stop(coast);
 
-  armRotationSensor.setPosition(-10, degrees);
-  float armTargetAngle = -10;
+  armRotationSensor.setPosition(10, degrees);
+  float armTargetAngle = 10;
   PID* armPID = new PID(armTargetAngle - armRotationSensor.position(degrees), ArmParameters.kp, ArmParameters.ki, ArmParameters.kd, ArmParameters.integralRange, ArmParameters.settleThreshold, ArmParameters.settleTime, true);
   while (true) {
     robotDrivetrain->driverControl();
@@ -1168,17 +1168,17 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
     
     int armButtonCount = a + b + x + y;
     if (armButtonCount == 1) {
-      if (x && armTargetAngle != -10) {
-        armTargetAngle = -10;
+      if (x && armTargetAngle != 10) {
+        armTargetAngle = 10;
         armPID->accumulatedError = 0;
-      } else if (a && armTargetAngle != -30) {
-        armTargetAngle = -30;
+      } else if (a && armTargetAngle != 48) {
+        armTargetAngle = 48;
         armPID->accumulatedError = 0;
-      } else if (b && armTargetAngle != -45) {
-        armTargetAngle = -45;
+      } else if (b && armTargetAngle != 55) {
+        armTargetAngle = 55;
         armPID->accumulatedError = 0;
-      } else if (y && armTargetAngle != -170) {
-        armTargetAngle = -170;
+      } else if (y && armTargetAngle != 162) {
+        armTargetAngle = 162;
         armPID->accumulatedError = 0;
       }
     }
