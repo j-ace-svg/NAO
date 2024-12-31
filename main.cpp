@@ -1142,7 +1142,8 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
     
     int armSpinDirection = bUp - bDown;
     Brain.Screen.clearScreen();
-    Brain.Screen.print("%d", armSpinDirection);
+    Brain.Screen.setCursor(1, 1);
+    Brain.Screen.print("Dir: %f", armSpinDirection);
 
     armMotor.setVelocity(100 * (float) armSpinDirection, percent);
     armMotor.spin(forward);
