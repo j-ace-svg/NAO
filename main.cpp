@@ -1137,8 +1137,8 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
     }
 
     // Arm
-    bool bDown = robotDrivetrain->remoteControl->ButtonR1.pressing();
-    bool bUp = robotDrivetrain->remoteControl->ButtonR2.pressing();
+    bool bDown = robotDrivetrain->remoteControl->ButtonDown.pressing();
+    bool bUp = robotDrivetrain->remoteControl->ButtonUp.pressing();
     
     int armSpinDirection = bUp - bDown;
     Brain.Screen.clearScreen();
