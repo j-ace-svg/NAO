@@ -704,7 +704,7 @@ motor RightDriveMotorMiddle = motor(PORT8, ratio6_1, false);
 motor RightDriveMotorBack = motor(PORT9, ratio6_1, false);
 motor_group RightDrive = motor_group(RightDriveMotorFront, RightDriveMotorMiddle, RightDriveMotorBack);
 
-inertial InertialSensor = inertial(PORT5);
+inertial InertialSensor = inertial(PORT19);
 
 
 // Intake
@@ -712,7 +712,7 @@ motor IntakeRollerMotor = motor(PORT6, ratio36_1, false);
 motor IntakeBeltMotor = motor(PORT10, ratio36_1, true);
 
 // Arm
-motor ArmMotor = motor(PORT19, ratio18_1, true);
+motor ArmMotor = motor(PORT5, ratio18_1, true);
 rotation ArmRotationSensor = rotation(PORT1, false);
 
 // Doinker
@@ -740,7 +740,7 @@ odomParameters TurnParameters = {19.3, 0.009, 60, M_PI / 2, 0.025, 0.3, 50}; // 
 odomParameters ArcParameters = {26.2, 0.009, 40, M_PI / 2, 0.035, 0.2, 50}; // Starting with copy/paste of TurnParameters
 odomParameters HeadingParameters = {40, 0.020, 40, M_PI / 2, 0.035, 0.2, 0};
 
-odomParameters ArmParameters = {2, 0, 0, 0, 0, 0, 0};
+odomParameters ArmParameters = {0.02, 0, 0, 0, 0, 0, 0};
 
 /* --------------- Start autons --------------- */
 
@@ -1283,7 +1283,7 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
       } else if (a && armTargetAngle != 48) {
         armTargetAngle = 48;
         armPID->accumulatedError = 0;
-      } else if (b && armTargetAngle != 55) {
+      } else if (b && armTargetAngle != 162) {
         armTargetAngle = 55;
         armPID->accumulatedError = 0;
       } else if (y && armTargetAngle != 162) {
@@ -1293,7 +1293,7 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
     }
     Brain.Screen.clearScreen();
     Brain.Screen.setCursor(1, 1);
-    Brain.Screen.print("Arm pos: %f", armRotationSensor.position(degrees));
+    Brain.Screen.print("Integral: %f", armPID->accumulatedError);
 
     float armVelocity = armPID->calculateNextStep(armTargetAngle - armRotationSensor.position(degrees));
 
