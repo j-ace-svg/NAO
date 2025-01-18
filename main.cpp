@@ -397,6 +397,7 @@ class PID {
       if (fabs(error) > integralRange) accumulatedError = 0; // Error outside of range for accumulating integral
       if (!preserveIntegral && (error == 0 || (error > 0 &&  previousError < 0) || (error < 0 && previousError > 0))) {
         accumulatedError = 0; // Error crossed 0
+        Brain.Screen.newline();
         Brain.Screen.print("Crossed");
       }
 
@@ -1250,13 +1251,17 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
     // Intake
     bool r1 = robotDrivetrain->remoteControl->ButtonR1.pressing();
     bool r2 = robotDrivetrain->remoteControl->ButtonR2.pressing();
+    bool bUp = robotDrivetrain->remoteControl->ButtonUp.pressing();
+    bool bDown = robotDrivetrain->remoteControl->ButtonDown.pressing();
     
     int intakeSpinDirection = r2 - r1;
+    int intakeRollerSpinDirection = bUp - bDown;
+    if (intakeRollerSpinDirection == 0) intakeRollerSpinDirection = intakeSpinDirection;
 
     intakeBeltMotor.setVelocity(100 * (float) intakeSpinDirection, percent);
     intakeBeltMotor.spin(forward);
 
-    intakeRollerMotor.setVelocity(100 * (float) intakeSpinDirection, percent);
+    intakeRollerMotor.setVelocity(100 * (float) intakeRollerSpinDirection, percent);
     intakeRollerMotor.spin(reverse);
 
     
@@ -1293,6 +1298,7 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
         armTargetAngle = 162;
         armPID->accumulatedError = 0;
       }
+      Brain.Screen.newline();
       Brain.Screen.print("New Target");
     }
     //Brain.Screen.clearScreen();
