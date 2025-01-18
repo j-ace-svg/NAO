@@ -1287,7 +1287,7 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
         armTargetAngle = 48;
         armPID->accumulatedError = 0;
       } else if (b && armTargetAngle != 162) {
-        armTargetAngle = 55;
+        armTargetAngle = 162;
         armPID->accumulatedError = 0;
       } else if (y && armTargetAngle != 162) {
         armTargetAngle = 162;
