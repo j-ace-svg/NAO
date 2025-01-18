@@ -397,7 +397,7 @@ class PID {
       if (fabs(error) > integralRange) accumulatedError = 0; // Error outside of range for accumulating integral
       if (!preserveIntegral && (error == 0 || (error > 0 &&  previousError < 0) || (error < 0 && previousError > 0))) {
         accumulatedError = 0; // Error crossed 0
-        Brain.Screen.newline();
+        Brain.Screen.newLine();
         Brain.Screen.print("Crossed");
       }
 
