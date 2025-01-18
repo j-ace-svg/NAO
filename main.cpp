@@ -743,7 +743,7 @@ odomParameters TurnParameters = {19.3, 0.009, 60, M_PI / 2, 0.025, 0.3, 50}; // 
 odomParameters ArcParameters = {26.2, 0.009, 40, M_PI / 2, 0.035, 0.2, 50}; // Starting with copy/paste of TurnParameters
 odomParameters HeadingParameters = {40, 0.020, 40, M_PI / 2, 0.035, 0.2, 0};
 
-odomParameters ArmParameters = {0.02, 0.001, 0, M_PI / 6, 0, 0, 0};
+odomParameters ArmParameters = {0.014, 0, 0.001, M_PI / 6, 0, 0, 0};
 
 /* --------------- Start autons --------------- */
 
