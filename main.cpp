@@ -395,7 +395,10 @@ class PID {
       // Integral
       accumulatedError = accumulatedError + error;
       if (fabs(error) > integralRange) accumulatedError = 0; // Error outside of range for accumulating integral
-      if (!preserveIntegral && (error == 0 || (error > 0 &&  previousError < 0) || (error < 0 && previousError > 0))) accumulatedError = 0; // Error crossed 0
+      if (!preserveIntegral && (error == 0 || (error > 0 &&  previousError < 0) || (error < 0 && previousError > 0))) {
+        accumulatedError = 0; // Error crossed 0
+        Brain.Screen.print("Crossed");
+      }
 
       // Derivative
       float deltaError = error - previousError;
@@ -740,7 +743,7 @@ odomParameters TurnParameters = {19.3, 0.009, 60, M_PI / 2, 0.025, 0.3, 50}; // 
 odomParameters ArcParameters = {26.2, 0.009, 40, M_PI / 2, 0.035, 0.2, 50}; // Starting with copy/paste of TurnParameters
 odomParameters HeadingParameters = {40, 0.020, 40, M_PI / 2, 0.035, 0.2, 0};
 
-odomParameters ArmParameters = {0.02, 0, 0, 0, 0, 0, 0};
+odomParameters ArmParameters = {0.02, 0.001, 0, M_PI / 6, 0, 0, 0};
 
 /* --------------- Start autons --------------- */
 
@@ -1291,9 +1294,9 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
         armPID->accumulatedError = 0;
       }
     }
-    Brain.Screen.clearScreen();
-    Brain.Screen.setCursor(1, 1);
-    Brain.Screen.print("Integral: %f", armPID->accumulatedError);
+    //Brain.Screen.clearScreen();
+    //Brain.Screen.setCursor(1, 1);
+    //Brain.Screen.print("Integral: %f", armPID->accumulatedError);
 
     float armVelocity = armPID->calculateNextStep(armTargetAngle - armRotationSensor.position(degrees));
 
