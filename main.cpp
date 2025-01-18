@@ -1293,6 +1293,7 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
         armTargetAngle = 162;
         armPID->accumulatedError = 0;
       }
+      Brain.Screen.print("New Target");
     }
     //Brain.Screen.clearScreen();
     //Brain.Screen.setCursor(1, 1);
