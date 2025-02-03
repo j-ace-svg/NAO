@@ -329,6 +329,8 @@ class Odometry {
 
     coordinate getGlobalPositionChange() {
       coordinate localChange = {0, 2 * sinf(getDeltaOrientation() / 2) * getPathArcRadius()};
+      Brain.Screen.setCursor(7, 1);
+      Brain.Screen.print(localChange.x);
 
       float localRotationOffset = getOldOrientation() + getDeltaOrientation() / 2;
 
@@ -792,16 +794,10 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMo
     Brain.Screen.print("Orientation: %f", robotOrientation);
     Brain.Screen.newLine();
     Brain.Screen.print("Arc Radius: %f", arcRadius);
-    Brain.Screen.newLine();
-    Brain.Screen.print("X: %f", globalPosition.x);
-    Brain.Screen.newLine();
-    Brain.Screen.print("Y: %f", globalPosition.y);
-
 
     robotDrivetrain->odometryStep();
   }
 }
-
 
 void redLowAlly(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->straightParameters.maxVelocity = 35;
