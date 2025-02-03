@@ -800,6 +800,7 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMo
 
     robotDrivetrain->odometryStep();
   }
+}
 
 
 void redLowAlly(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
