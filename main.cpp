@@ -1410,14 +1410,14 @@ void preAutonomous(void) {
   InertialSensor.calibrate();
   wait(3, seconds);
   
-  odomDebugAuton();
+  autonSelector();
 }
 
 void templateAutonomous(void) { // Dummy wrapper function to call the desired autonomous (because the competition template can't take parameters)
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
 
-  SelectedAuton(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+  odomDebugAuton(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
