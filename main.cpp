@@ -771,86 +771,6 @@ odomParameters ArmParameters = {0.014, 0, 0.001, M_PI / 6, 0, 0, 0};
 
 void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   
-  /*
-  intakeBeltMotor.setVelocity(100, percent);
-  IntakeRollerMotor.setVelocity(100, percent);
-  robotDrivetrain->straightParameters.maxVelocity = 30;
-  */
-
-  robotDrivetrain->turnParameters.maxVelocity = 40;
-  //robotDrivetrain->driveDistance(-17.75);
-  robotDrivetrain->turnToAngle(M_PI/2);
-  /*
-  robotDrivetrain->driveDistance(-2.25);
-  LeftMoGoPneumatic.set(true);
-  RightMoGoPneumatic.set(true);
-  IntakeRollerMotor.setVelocity(100,percent);
-  intakeBeltMotor.setVelocity(100,percent);
-  intakeBeltMotor.spin(forward);
-  IntakeRollerMotor.spin(forward);
-  wait(550, msec);
-  intakeBeltMotor.stop();
-  IntakeRollerMotor.stop();
-  LeftMoGoPneumatic.set(false);
-  RightMoGoPneumatic.set(false);
-  robotDrivetrain->driveDistance(3);
-  robotDrivetrain->straightParameters.maxVelocity = 75;
-  robotDrivetrain->turnParameters.maxVelocity = 40;
-  robotDrivetrain->turnToAngle(-M_PI*.69);
-  robotDrivetrain->turnParameters.maxVelocity = 10;
-  robotDrivetrain->turnToAngle(-M_PI*.69);
-  robotDrivetrain->straightParameters.maxVelocity = 75;
-  robotDrivetrain->driveDistance(-34);
-  robotDrivetrain->straightParameters.maxVelocity = 35;
-  robotDrivetrain->turnParameters.maxVelocity = 50;
-  robotDrivetrain->driveDistance(-12);
-  robotDrivetrain->straightParameters.maxVelocity = 75;
-  LeftMoGoPneumatic.set(true);
-  RightMoGoPneumatic.set(true);
-  wait(100, msec);
-  robotDrivetrain->turnToAngle(M_PI*.285);
-  IntakeRollerMotor.setVelocity(100,percent);
-  intakeBeltMotor.setVelocity(100,percent);
-  intakeBeltMotor.spin(forward);
-  IntakeRollerMotor.spin(forward);
-  robotDrivetrain->straightParameters.maxVelocity = 80;
-  robotDrivetrain->driveDistance(27);
-  wait(400, msec);
-  robotDrivetrain->straightParameters.maxVelocity = 30;
-  robotDrivetrain->driveDistance(-22);
-  robotDrivetrain->straightParameters.maxVelocity = 80;
-  robotDrivetrain->turnToAngle(0);
-  robotDrivetrain->driveDistance(28);
-  wait(500, msec);
-  robotDrivetrain->turnToAngle(M_PI);
-  robotDrivetrain->turnParameters.maxVelocity = 5;
-  robotDrivetrain->turnToAngle(M_PI);
-  robotDrivetrain->straightParameters.maxVelocity = 80;
-  robotDrivetrain->driveDistance(60);
-  intakeBeltMotor.spin(forward);
-  wait(750, msec);
-  intakeBeltMotor.stop();
-
-  robotDrivetrain->driveDistance(14);
-  robotDrivetrain->turnToAngle(-M_PI/4);
-  IntakeRollerMotor.spin(reverse);
-  robotDrivetrain->driveDistance(50);
-  wait(300, msec);
-  robotDrivetrain->turnParameters.maxVelocity = 30;
-  robotDrivetrain->turnToAngle(0.004*M_PI);
-  robotDrivetrain->turnParameters.maxVelocity = 50;
-  wait(300, msec);
-  Brain.Screen.clearScreen();
-  Brain.Screen.print("Orientation: %f", robotDrivetrain->odom->getOrientation());
-  robotDrivetrain->driveDistance(-15);
-  robotDrivetrain->straightParameters.maxVelocity = 20;
-  robotDrivetrain->driveDistance(-7);
-  robotDrivetrain->straightParameters.maxVelocity = 80;
-  leftMoGoPneumatic.set(true);
-  rightMoGoPneumatic.set(true);
-  intakeBeltMotor.spin(forward);
-  Brain.Screen.newLine();
-  Brain.Screen.print("Orientation: %f", robotDrivetrain->odom->getOrientation());
   while (true) {
     Brain.Screen.clearScreen();
     Brain.Screen.setCursor(1, 1);
@@ -876,7 +796,6 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMo
     Brain.Screen.print("X: %f", globalPosition.x);
     Brain.Screen.newLine();
     Brain.Screen.print("Y: %f", globalPosition.y);
-    */
 
 
     robotDrivetrain->odometryStep();
