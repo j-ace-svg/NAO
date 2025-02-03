@@ -211,8 +211,8 @@ class Odometry {
       }
 
       // Calculate odometry
-      //oldGlobalPosition = globalPosition;
-      //globalPosition = globalPosition + getGlobalPositionChange();
+      oldGlobalPosition = globalPosition;
+      globalPosition = globalPosition + getGlobalPositionChange();
     }
 
     // Setter methods
