@@ -1410,7 +1410,7 @@ void preAutonomous(void) {
   InertialSensor.calibrate();
   wait(3, seconds);
   
-  autonSelector();
+  odomDebugAuton();
 }
 
 void templateAutonomous(void) { // Dummy wrapper function to call the desired autonomous (because the competition template can't take parameters)
