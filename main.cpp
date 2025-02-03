@@ -729,7 +729,7 @@ motor RightDriveMotorMiddle = motor(PORT8, ratio6_1, false);
 motor RightDriveMotorBack = motor(PORT9, ratio6_1, false);
 motor_group RightDrive = motor_group(RightDriveMotorFront, RightDriveMotorMiddle, RightDriveMotorBack);
 
-inertial InertialSensor = inertial(PORT19);
+inertial InertialSensor = inertial(PORT18);
 
 
 // Intake
