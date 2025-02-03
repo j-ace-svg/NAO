@@ -329,7 +329,8 @@ class Odometry {
 
     coordinate getGlobalPositionChange() {
       coordinate localChange = {0, 2 * sinf(getDeltaOrientation() / 2) * getPathArcRadius()};
-      Brain.Screen.setCursor(7, 1);
+      Brain.Screen.clearScreen();
+      Brain.Screen.setCursor(1, 1);
       Brain.Screen.print("Local Y change: %f", localChange.y);
 
       float localRotationOffset = getOldOrientation() + getDeltaOrientation() / 2;
@@ -774,7 +775,7 @@ odomParameters ArmParameters = {0.014, 0, 0.001, M_PI / 6, 0, 0, 0};
 void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   
   while (true) {
-    Brain.Screen.clearScreen();
+    /*Brain.Screen.clearScreen();
     Brain.Screen.setCursor(1, 1);
     coordinate globalPosition = robotDrivetrain->odom->getGlobalPosition();
     float xCoordinate = globalPosition.x;
@@ -793,7 +794,7 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMo
     Brain.Screen.newLine();
     Brain.Screen.print("Orientation: %f", robotOrientation);
     Brain.Screen.newLine();
-    Brain.Screen.print("Arc Radius: %f", arcRadius);
+    Brain.Screen.print("Arc Radius: %f", arcRadius);*/
 
     robotDrivetrain->odometryStep();
   }
