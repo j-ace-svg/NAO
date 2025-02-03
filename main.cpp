@@ -121,6 +121,11 @@ struct coordinate {
   }
 };
 
+enum OdometryType {
+  NoTracking,
+  HorizontalTracking
+};
+
 class Odometry {
   private:
     float resetOrientGlobal; // Global orientation at last reset
@@ -141,6 +146,8 @@ class Odometry {
     motor_group* leftDrive;
     motor_group* rightDrive;
     inertial* inertialSensor;
+    rotation* horizontalTrackingWheel;
+    OdometryType mode;
     float orientGlobalDrift;
     float inertialDriftEpsilon; // Minimum threshold used to determine whether or not turning is drift
     float distLeft; // Distance from tracking center to left tracking wheel
@@ -152,6 +159,20 @@ class Odometry {
     Odometry(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, float _inertialDriftEpsilon, float _distLeft, float _distRight, float _distBack, float _leftWheelRadius, float _rightWheelRadius) {
       leftDrive = &_leftDrive;
       rightDrive = &_rightDrive;
+      mode = OdometryType::NoTracking;
+      inertialSensor = &_inertialSensor;
+      inertialDriftEpsilon = _inertialDriftEpsilon;
+      distLeft = _distLeft;
+      distRight = _distRight;
+      leftWheelRadius = _leftWheelRadius;
+      rightWheelRadius = _rightWheelRadius;
+    }
+
+    Odometry(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, rotation &_horizontalTrackingWheel, float _inertialDriftEpsilon, float _distLeft, float _distRight, float _distBack, float _leftWheelRadius, float _rightWheelRadius) {
+      leftDrive = &_leftDrive;
+      rightDrive = &_rightDrive;
+      horizontalTrackingWheel = &_horizontalTrackingWheel;
+      mode = OdometryType::HorizontalTracking;
       inertialSensor = &_inertialSensor;
       inertialDriftEpsilon = _inertialDriftEpsilon;
       distLeft = _distLeft;
@@ -730,8 +751,8 @@ digital_out LeftMoGoPneumatic = digital_out(Brain.ThreeWirePort.G);
 digital_out RightMoGoPneumatic = digital_out(Brain.ThreeWirePort.H);
 controller RemoteControl = controller(primary);
 
-
 // Odometry
+rotation HorizontalTrackingWheel = rotation(PORT19, false);
 float InertialDriftEpsilon = 0.000025;
 float DistLeft = 7.5;
 float DistRight = 7.5;
