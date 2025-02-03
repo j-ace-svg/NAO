@@ -330,7 +330,7 @@ class Odometry {
     coordinate getGlobalPositionChange() {
       coordinate localChange = {0, 2 * sinf(getDeltaOrientation() / 2) * getPathArcRadius()};
       Brain.Screen.setCursor(7, 1);
-      Brain.Screen.print(localChange.x);
+      Brain.Screen.print("Local Y change: %f", localChange.y);
 
       float localRotationOffset = getOldOrientation() + getDeltaOrientation() / 2;
 
