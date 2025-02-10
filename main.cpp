@@ -133,11 +133,13 @@ class Odometry {
     float oldTimestamp;
     float oldLeftAngle;
     float oldRightAngle;
+    float oldBackAngle;
     float oldOrientGlobal;
     coordinate oldGlobalPosition = {0, 0}; // Previous global position vector
     float timestamp;
     float leftAngle;
     float rightAngle;
+    float backAngle;
     float orientGlobal;
     coordinate globalPosition = {0, 0};
     float slippingEpsilon = 0.01;
@@ -155,6 +157,7 @@ class Odometry {
     float distBack; // Distance from tracking center to back tracking wheel
     float leftWheelRadius;
     float rightWheelRadius;
+    float backWheelRadius;
 
     Odometry(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, float _inertialDriftEpsilon, float _distLeft, float _distRight, float _distBack, float _leftWheelRadius, float _rightWheelRadius) {
       leftDrive = &_leftDrive;
@@ -168,7 +171,7 @@ class Odometry {
       rightWheelRadius = _rightWheelRadius;
     }
 
-    Odometry(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, rotation &_horizontalTrackingWheel, float _inertialDriftEpsilon, float _distLeft, float _distRight, float _distBack, float _leftWheelRadius, float _rightWheelRadius) {
+    Odometry(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, rotation &_horizontalTrackingWheel, float _inertialDriftEpsilon, float _distLeft, float _distRight, float _distBack, float _leftWheelRadius, float _rightWheelRadius, float _backWheelRadius) {
       leftDrive = &_leftDrive;
       rightDrive = &_rightDrive;
       horizontalTrackingWheel = &_horizontalTrackingWheel;
@@ -177,14 +180,21 @@ class Odometry {
       inertialDriftEpsilon = _inertialDriftEpsilon;
       distLeft = _distLeft;
       distRight = _distRight;
+      distBack = _distBack;
       leftWheelRadius = _leftWheelRadius;
       rightWheelRadius = _rightWheelRadius;
+      backWheelRadius = _backWheelRadius;
     }
 
     void initSensorValues() {
       timestamp = Brain.Timer.time(seconds);
       leftAngle = leftDrive->position(turns) * 2 * M_PI;
       rightAngle = rightDrive->position(turns) * 2 * M_PI;
+      if (mode == OdometryType::HorizontalTracking) {
+        backAngle = horizontalTrackingWheel->position(turns) * 2 * M_PI;
+      } else {
+        backAngle = 0;
+      }
       orientGlobal = inertialSensor->rotation(turns) * 2 * M_PI;
       orientGlobalDrift = 0;
       globalPosition = {0, 0};
@@ -200,10 +210,12 @@ class Odometry {
       oldTimestamp = timestamp;
       oldLeftAngle = leftAngle;
       oldRightAngle = rightAngle;
+      oldBackAngle = backAngle;
       oldOrientGlobal = orientGlobal;
       timestamp = Brain.Timer.time(seconds);
       leftAngle = leftDrive->position(turns) * 2 * M_PI;
       rightAngle = rightDrive->position(turns) * 2 * M_PI;
+      if (mode == OdometryType::HorizontalTracking) backAngle = horizontalTrackingWheel->position(turns) * 2 * M_PI;
       orientGlobal = inertialSensor->rotation(turns) * 2 * M_PI;
 
       if (fabs(orientGlobal - oldOrientGlobal) < inertialDriftEpsilon) {
@@ -279,6 +291,14 @@ class Odometry {
       return getDeltaRightAngle() * rightWheelRadius;
     }
 
+    float getDeltaBackAngle() {
+      return backAngle - oldBackAngle;
+    }
+
+    float getDeltaBackDistance() {
+      return getDeltaBackAngle() * backWheelRadius;
+    }
+
     float getDeltaOrientation() {
       return orientGlobal - oldOrientGlobal;
     }
@@ -317,21 +337,62 @@ class Odometry {
         minSideRadius = rightRadius;
         minSideDeltaAngle = getDeltaRightDistance();
         minSideDist = distRight;
-      }
+      } else { // Same
+        minSideRadiusAcceleration = leftAcceleration;
+        minSideRadiusVelocity = leftVelocity;
+        minSideRadius = leftRadius;
+        minSideDeltaAngle = getDeltaLeftDistance();
+        minSideDist = distLeft;
+      }/*
       if (fabs(minSideRadiusAcceleration - inertialAcceleration) > slippingEpsilon) { // Slippage on both sides
         minSideRadiusAcceleration = inertialAcceleration;
         minSideRadiusVelocity = sqrt(minSideRadiusAcceleration * minSideRadius);
         minSideRadius = minSideRadiusVelocity * getDeltaTime() / getDeltaOrientation();
-      }
+        Brain.Screen.print("Both slip");
+        Brain.Screen.newLine();
+      }*/
 
       return minSideRadius;
     }
 
+    float getStrayArcRadius() {
+      if (mode == OdometryType::NoTracking) return 0;
+      float horizontalRadius = getDeltaBackDistance() / getDeltaOrientation() - distBack;
+      return horizontalRadius; // No slippage calculations makes things much easier
+    }
+
     coordinate getGlobalPositionChange() {
-      coordinate localChange = {0, 2 * sinf(getDeltaOrientation() / 2) * getPathArcRadius()};
-      Brain.Screen.clearScreen();
+      float localChangeAngle = 2 * sinf(getDeltaOrientation() / 2);
+      coordinate localChange = {localChangeAngle * getStrayArcRadius(), localChangeAngle * getPathArcRadius()};
+      /*Brain.Screen.clearScreen();
       Brain.Screen.setCursor(1, 1);
+      Brain.Screen.print("Local angle change: %f", 2 * sinf(getDeltaOrientation() / 2));
+      Brain.Screen.newLine();
+      Brain.Screen.print("Local radius: %f", getPathArcRadius());
+      Brain.Screen.newLine();
       Brain.Screen.print("Local Y change: %f", localChange.y);
+      Brain.Screen.newLine();*/
+      if (getPathArcRadius() == INF) {
+        float deltaLeftDist = getDeltaLeftDistance();
+        float deltaRightDist = getDeltaRightDistance();
+        if ((deltaLeftDist < 0 && deltaRightDist > 0) || (deltaLeftDist > 0 && deltaRightDist < 0)) { // Forwards and Backwards (no movement)
+          localChange = {0, 0};
+        } else if (deltaLeftDist == 0 || deltaRightDist == 0) { // No movement
+          localChange = {0, 0};
+        } else if (deltaLeftDist > 0) { // Forwards
+          if (deltaLeftDist > deltaRightDist) {
+            localChange = {0, deltaRightDist};
+          } else {
+            localChange = {0, deltaLeftDist};
+          }
+        } else { // Backwards
+          if (deltaLeftDist > deltaRightDist) {
+            localChange = {0, deltaLeftDist};
+          } else {
+            localChange = {0, deltaRightDist};
+          }
+        }
+      }
 
       float localRotationOffset = getOldOrientation() + getDeltaOrientation() / 2;
 
@@ -339,27 +400,10 @@ class Odometry {
       transformMatrix rotationMatrix = {{{cosf(-localRotationOffset), -sinf(-localRotationOffset)}, {sinf(-localRotationOffset), cosf(-localRotationOffset)}}};
 
       coordinate globalChange = localChange * rotationMatrix;
-      if (getPathArcRadius() == INF) {
-        float deltaLeftDist = getDeltaLeftDistance();
-        float deltaRightDist = getDeltaRightDistance();
-        if ((deltaLeftDist < 0 && deltaRightDist > 0) || (deltaLeftDist > 0 && deltaRightDist < 0)) { // Forwards and Backwards (no movement)
-          globalChange = {0, 0};
-        } else if (deltaLeftDist == 0 || deltaRightDist == 0) { // No movement
-          globalChange = {0, 0};
-        } else if (deltaLeftDist > 0) { // Forwards
-          if (deltaLeftDist > deltaRightDist) {
-            globalChange = {0, deltaRightDist};
-          } else {
-            globalChange = {0, deltaLeftDist};
-          }
-        } else { // Backwards
-          if (deltaLeftDist > deltaRightDist) {
-            globalChange = {0, deltaLeftDist};
-          } else {
-            globalChange = {0, deltaRightDist};
-          }
-        }
-      }
+      /*Brain.Screen.print("Global Y change: %f", globalChange.y);
+      Brain.Screen.newLine();
+      Brain.Screen.print("Global X change: %f", globalChange.x);
+      Brain.Screen.newLine();*/
       return globalChange;
     }
 };
@@ -775,7 +819,7 @@ odomParameters ArmParameters = {0.014, 0, 0.001, M_PI / 6, 0, 0, 0};
 void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &IntakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   
   while (true) {
-    /*Brain.Screen.clearScreen();
+    Brain.Screen.clearScreen();
     Brain.Screen.setCursor(1, 1);
     coordinate globalPosition = robotDrivetrain->odom->getGlobalPosition();
     float xCoordinate = globalPosition.x;
@@ -794,7 +838,7 @@ void odomDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMo
     Brain.Screen.newLine();
     Brain.Screen.print("Orientation: %f", robotOrientation);
     Brain.Screen.newLine();
-    Brain.Screen.print("Arc Radius: %f", arcRadius);*/
+    Brain.Screen.print("Arc Radius: %f", arcRadius);
 
     robotDrivetrain->odometryStep();
   }
