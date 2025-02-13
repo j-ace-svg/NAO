@@ -749,7 +749,8 @@ class Drive {
   }
 
   // Actual Odometry auton functions
-  void turnToPoint(coordinate targetPoint) {
+  void turnToPoint(float x, float y) {
+    coordinate targetPoint = {x, y};
     coordinate offsetVector = targetPoint - odom->getGlobalPosition();
     PID* turnPID = new PID(atan2(offsetVector.y, offsetVector.x) - odom->getOrientation(), turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
     while (!turnPID->isSettled()) {
@@ -766,7 +767,8 @@ class Drive {
     driveVelocity(0);
   }
 
-  void driveToPoint(coordinate targetPoint) {
+  void driveToPoint(float x, float y) {
+    coordinate targetPoint = {x, y};
     coordinate offsetVector = targetPoint - odom->getGlobalPosition();
     PID* drivePID = new PID(offsetVector.mag(), straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange, straightParameters.settleThreshold, straightParameters.settleTime);
     PID* turnPID = new PID(atan2(offsetVector.y, offsetVector.x) - odom->getOrientation(), turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
@@ -1204,7 +1206,7 @@ void bigSkills(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, 
   
 }
 
-void straightDebug(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void straightDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->odom->resetOrientation(); // Start using this in autons to set the starting angle, this will just make the starting angle 0
   intakeBeltMotor.setVelocity(100, percent);
   intakeRollerMotor.setVelocity(100, percent);
@@ -1243,6 +1245,14 @@ void straightDebug(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
   wait(500, msec);
   robotDrivetrain->leftDrive->stop(coast);
   robotDrivetrain->rightDrive->stop(coast);
+}
+
+void pointDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+  robotDrivetrain->odom->resetOrientation();
+  robotDrivetrain->turnToPoint(5, 10);
+  robotDrivetrain->driveToPoint(5, 10);
+  robotDrivetrain->driveToPoint(-10, 5);
+  robotDrivetrain->driveToPoint(0, 0);
 }
 
 /* --------------- Start driver control ---------------*/
@@ -1405,7 +1415,7 @@ void templateAutonomous(void) { // Dummy wrapper function to call the desired au
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(HorizontalTrackingWheel, InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, BackWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
 
-  odomDebugAuton(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+  pointDebugAuton(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
