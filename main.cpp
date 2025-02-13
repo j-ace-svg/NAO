@@ -142,7 +142,6 @@ class Odometry {
     float backAngle;
     float orientGlobal;
     coordinate globalPosition = {0, 0};
-    float slippingEpsilon = 0.01;
 
   public:
     motor_group* leftDrive;
@@ -171,7 +170,7 @@ class Odometry {
       rightWheelRadius = _rightWheelRadius;
     }
 
-    Odometry(motor_group &_leftDrive, motor_group &_rightDrive, inertial &_inertialSensor, rotation &_horizontalTrackingWheel, float _inertialDriftEpsilon, float _distLeft, float _distRight, float _distBack, float _leftWheelRadius, float _rightWheelRadius, float _backWheelRadius) {
+    Odometry(motor_group &_leftDrive, motor_group &_rightDrive, rotation &_horizontalTrackingWheel, inertial &_inertialSensor, float _inertialDriftEpsilon, float _distLeft, float _distRight, float _distBack, float _leftWheelRadius, float _rightWheelRadius, float _backWheelRadius) {
       leftDrive = &_leftDrive;
       rightDrive = &_rightDrive;
       horizontalTrackingWheel = &_horizontalTrackingWheel;
@@ -322,8 +321,6 @@ class Odometry {
       float rightRadius = getDeltaRightDistance() / getDeltaOrientation() + distRight;
       float rightVelocity = rightRadius * getDeltaOrientation() / getDeltaTime();
       float rightAcceleration = pow(rightVelocity, 2) / rightRadius;
-      
-      float inertialAcceleration = inertialSensor->acceleration(yaxis);
 
       float minSideRadiusAcceleration = leftAcceleration;
       float minSideRadiusVelocity = leftVelocity;
@@ -343,15 +340,7 @@ class Odometry {
         minSideRadius = leftRadius;
         minSideDeltaAngle = getDeltaLeftDistance();
         minSideDist = distLeft;
-      }/*
-      if (fabs(minSideRadiusAcceleration - inertialAcceleration) > slippingEpsilon) { // Slippage on both sides
-        minSideRadiusAcceleration = inertialAcceleration;
-        minSideRadiusVelocity = sqrt(minSideRadiusAcceleration * minSideRadius);
-        minSideRadius = minSideRadiusVelocity * getDeltaTime() / getDeltaOrientation();
-        Brain.Screen.print("Both slip");
-        Brain.Screen.newLine();
-      }*/
-
+      }
       return minSideRadius;
     }
 
@@ -536,6 +525,15 @@ class Drive {
     headingParameters = _headingParameters;
   }
 
+  void initOdom(rotation &horizontalTrackingWheel, float inertialDriftEpsilon, float distLeft, float distRight, float distBack, float leftWheelRadius, float rightWheelRadius, float backWheelRadius, odomParameters _straightParameters, odomParameters _turnParameters, odomParameters _arcParameters, odomParameters _headingParameters) {
+    odom = new Odometry(*leftDrive, *rightDrive, horizontalTrackingWheel, *inertialSensor, inertialDriftEpsilon, distLeft, distRight, distBack, leftWheelRadius, rightWheelRadius, backWheelRadius);
+    odom->initSensorValues();
+    straightParameters = _straightParameters;
+    turnParameters = _turnParameters;
+    arcParameters = _arcParameters;
+    headingParameters = _headingParameters;
+  }
+
   void driverControl() {
     leftDrive->setVelocity(remoteControl->Axis3.position(), percent);
     if (abs(remoteControl->Axis3.position()) > 3) {
@@ -637,10 +635,6 @@ class Drive {
     PID* headingPID = new PID(0, headingParameters.kp, headingParameters.ki, headingParameters.kd, headingParameters.integralRange, headingParameters.settleThreshold, headingParameters.settleTime);
     while (!drivePID->isSettled()) {
       float distanceError = driveSetPoint - (odom->getLeftDistance() + odom->getRightDistance()) / 2;
-      //remoteControl->Screen.clearScreen();
-      //remoteControl->Screen.setCursor(1,1);
-      //remoteControl->Screen.print("Time settled: %f", turnPID->timeSettled);
-      //remoteControl->Screen.print("Error: %f", distanceError);
       float driveMotorVelocity = drivePID->calculateNextStep(distanceError);
       
       driveMotorVelocity = clampStraightVelocity(driveMotorVelocity);
@@ -667,12 +661,6 @@ class Drive {
     PID* turnPID = new PID(turnSetPoint - odom->getOrientation(), turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
     while (!turnPID->isSettled()) {
       float turnError = reduceAngleNegPiToPi(turnSetPoint - odom->getOrientation());
-      //remoteControl->Screen.clearScreen();
-      //remoteControl->Screen.setCursor(1,1);
-      //remoteControl->Screen.print("Time settled: %f", turnPID->timeSettled);
-      //remoteControl->Screen.print("Error: %f", turnError);
-      //remoteControl->Screen.newLine();
-      //remoteControl->Screen.print("Orientation: %f", odom->getOrientation());
       float turnMotorVelocity = turnPID->calculateNextStep(turnError);
 
       turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
@@ -697,10 +685,6 @@ class Drive {
     PID* turnPID = new PID(0, turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
     while (!turnPID->isSettled()) {
       float distanceError = driveSetPoint - (odom->getLeftDistance() + odom->getRightDistance()) / 2;
-      //remoteControl->Screen.clearScreen();
-      //remoteControl->Screen.setCursor(1,1);
-      //remoteControl->Screen.print("Time settled: %f", turnPID->timeSettled);
-      //remoteControl->Screen.print("Error: %f", distanceError);
       float driveMotorVelocity = drivePID->calculateNextStep(distanceError);
       
       driveMotorVelocity = clampStraightVelocity(driveMotorVelocity);
@@ -759,6 +743,29 @@ class Drive {
     }
     driveVelocity(0);
   }
+
+  // Actual Odometry auton functions
+
+
+  // Drivetrain autonomous functions
+  void turnToPoint(coordinate targetPoint) {
+    coordinate offsetVector = targetPoint - odom->getGlobalPosition();
+    PID* turnPID = new PID(std::atan2(offsetVector.y, offsetVector.x) - odom->getOrientation(), turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
+    while (!turnPID->isSettled()) {
+      coordinate offsetVector = targetPoint - odom->getGlobalPosition();
+      float turnError = reduceAngleNegPiToPi(std::atan2(offsetVector.y, offsetVector.x) - odom->getOrientation());
+      float turnMotorVelocity = turnPID->calculateNextStep(turnError);
+
+      turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
+      
+      driveVelocity(turnMotorVelocity, -turnMotorVelocity);
+
+      odometryStep();
+    }
+    Brain.Screen.newLine();
+    Brain.Screen.print(reduceAngleNegPiToPi(turnSetPoint - odom->getOrientation()));
+    driveVelocity(0);
+  }
 };
 
 #pragma endregion Custom Drive Library
@@ -806,6 +813,7 @@ float DistRight = 7.5;
 float DistBack = 0;
 float LeftWheelRadius = 1.625;
 float RightWheelRadius = 1.625;
+float BackWheelRadius = 1.375;
 /* kp, ki, kd, integralRange, settleThreshold, settleTime, maxVelocity */
 odomParameters StraightParameters = {5, 0, 0, 0, 0.25, 0.25, 80};
 odomParameters TurnParameters = {19.3, 0.009, 60, M_PI / 2, 0.025, 0.3, 50}; // kU = 34, pU = 1.398
@@ -1376,14 +1384,14 @@ void preAutonomous(void) {
 
 void templateAutonomous(void) { // Dummy wrapper function to call the desired autonomous (because the competition template can't take parameters)
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
-  robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
+  robotDrivetrain->initOdom(HorizontalTrackingWheel, InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, BackWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
 
   odomDebugAuton(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
-  robotDrivetrain->initOdom(InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
+  robotDrivetrain->initOdom(HorizontalTrackingWheel, InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, BackWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
 
   driverControl(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
