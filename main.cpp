@@ -119,6 +119,10 @@ struct coordinate {
   coordinate operator*(const transformMatrix& trans) {
     return coordinate(x * trans[0][0] + y * trans[1][0], x * trans[0][1] + y * trans[1][1]);
   }
+
+  float mag() {
+    return sqrt(pow(x, 2) + pow(y, 2));
+  }
 };
 
 enum OdometryType {
@@ -745,15 +749,12 @@ class Drive {
   }
 
   // Actual Odometry auton functions
-
-
-  // Drivetrain autonomous functions
   void turnToPoint(coordinate targetPoint) {
     coordinate offsetVector = targetPoint - odom->getGlobalPosition();
-    PID* turnPID = new PID(std::atan2(offsetVector.y, offsetVector.x) - odom->getOrientation(), turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
+    PID* turnPID = new PID(atan2(offsetVector.y, offsetVector.x) - odom->getOrientation(), turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
     while (!turnPID->isSettled()) {
       coordinate offsetVector = targetPoint - odom->getGlobalPosition();
-      float turnError = reduceAngleNegPiToPi(std::atan2(offsetVector.y, offsetVector.x) - odom->getOrientation());
+      float turnError = reduceAngleNegPiToPi(atan2(offsetVector.y, offsetVector.x) - odom->getOrientation());
       float turnMotorVelocity = turnPID->calculateNextStep(turnError);
 
       turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
@@ -762,8 +763,26 @@ class Drive {
 
       odometryStep();
     }
-    Brain.Screen.newLine();
-    Brain.Screen.print(reduceAngleNegPiToPi(turnSetPoint - odom->getOrientation()));
+    driveVelocity(0);
+  }
+
+  void driveToPoint(coordinate targetPoint) {
+    coordinate offsetVector = targetPoint - odom->getGlobalPosition();
+    PID* drivePID = new PID(offsetVector.mag(), straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange, straightParameters.settleThreshold, straightParameters.settleTime);
+    PID* turnPID = new PID(atan2(offsetVector.y, offsetVector.x) - odom->getOrientation(), turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
+    while (!turnPID->isSettled()) {
+      coordinate offsetVector = targetPoint - odom->getGlobalPosition();
+      float turnError = reduceAngleNegPiToPi(atan2(offsetVector.y, offsetVector.x) - odom->getOrientation());
+      float driveMotorVelocity = drivePID->calculateNextStep(offsetVector.mag());
+      float turnMotorVelocity = turnPID->calculateNextStep(turnError);
+
+      driveMotorVelocity = clampStraightVelocity(driveMotorVelocity);
+      turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
+      
+      driveVelocity(driveMotorVelocity + turnMotorVelocity, driveMotorVelocity - turnMotorVelocity);
+
+      odometryStep();
+    }
     driveVelocity(0);
   }
 };
