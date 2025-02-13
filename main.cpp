@@ -778,8 +778,11 @@ class Drive {
       float driveMotorVelocity = drivePID->calculateNextStep(offsetVector.mag());
       float turnMotorVelocity = turnPID->calculateNextStep(turnError);
 
-      driveMotorVelocity = clampStraightVelocity(driveMotorVelocity);
       turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
+      float turnScalingFactor = cosf(turnError); // Only drive forward when facing the correct direction
+      driveMotorVelocity = clampStraightVelocity(driveMotorVelocity) * turnScalingFactor;
+
+      if (drivePID.timeSettled > 0) turnMotorVelocity = 0; // Don't try to correct direction when settling in
       
       driveVelocity(driveMotorVelocity + turnMotorVelocity, driveMotorVelocity - turnMotorVelocity);
 
@@ -1247,11 +1250,14 @@ void straightDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &a
   robotDrivetrain->rightDrive->stop(coast);
 }
 
-void pointDebugAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+void flexingOdom(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->odom->resetOrientation();
-  robotDrivetrain->turnToPoint(5, 10);
-  robotDrivetrain->driveToPoint(5, 10);
-  robotDrivetrain->driveToPoint(-10, 5);
+  robotDrivetrain->driveToPoint(24*2, 0);
+  robotDrivetrain->driveToPoint(24*2, 24*4);
+  robotDrivetrain->driveToPoint(0, 24*2);
+  robotDrivetrain->turnToPoint(24*2, 0);
+  robotDrivetrain->driveDistance(sqrt(2) * 24*2);
+  robotDrivetrain->driveToPoint(-24*2, 0);
   robotDrivetrain->driveToPoint(0, 0);
 }
 
