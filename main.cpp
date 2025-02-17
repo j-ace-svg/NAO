@@ -390,7 +390,7 @@ class Odometry {
       float localRotationOffset = getOldOrientation() + getDeltaOrientation() / 2;
 
       // The extra pair of curly braces around the initializer in the line below is actually necessary (because c funkiness)
-      transformMatrix rotationMatrix = {{{cosf(-localRotationOffset), -sinf(-localRotationOffset)}, {sinf(-localRotationOffset), cosf(-localRotationOffset)}}};
+      transformMatrix rotationMatrix = {{{-cosf(-localRotationOffset), -sinf(-localRotationOffset)}, {-sinf(-localRotationOffset), cosf(-localRotationOffset)}}};
 
       coordinate globalChange = localChange * rotationMatrix;
       /*Brain.Screen.print("Global Y change: %f", globalChange.y);
