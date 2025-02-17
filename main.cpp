@@ -1275,10 +1275,6 @@ void miniOdomTestAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &ar
   Brain.Screen.newLine();
   Brain.Screen.print("Y coordinate: %f", yCoordinate);
   Brain.Screen.newLine();
-
-  while (true) {
-    robotDrivetrain->odometryStep();
-  }
 }
 
 /* --------------- Start driver control ---------------*/
