@@ -789,7 +789,10 @@ class Drive {
 
       if (drivePID->timeSettled > 0) turnMotorVelocity = 0; // Don't try to correct direction when settling in
       
-      driveVelocity(driveMotorVelocity + turnMotorVelocity, driveMotorVelocity - turnMotorVelocity);
+      //driveVelocity(driveMotorVelocity + turnMotorVelocity, driveMotorVelocity - turnMotorVelocity);
+      leftDrive->stop(coast);
+      rightDrive->stop(coast);
+
 
       odometryStep();
     }
