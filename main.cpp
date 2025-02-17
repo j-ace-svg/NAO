@@ -781,6 +781,8 @@ class Drive {
       Brain.Screen.setCursor(1, 1);
       Brain.Screen.print("Turn Error: %f", turnError);
       Brain.Screen.newLine();
+      Brain.Screen.print("Position X: %f", odom->getGlobalPosition().x);
+      Brain.Screen.newLine();
       Brain.Screen.print("Offset X: %f", offsetVector.x);
       Brain.Screen.newLine();
       Brain.Screen.print("Offset Y: %f", offsetVector.y);
