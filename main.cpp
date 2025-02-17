@@ -780,6 +780,8 @@ class Drive {
       Brain.Screen.clearScreen();
       Brain.Screen.setCursor(1, 1);
       Brain.Screen.print("Turn Error: %f", turnError);
+      Brain.Screen.newLine();
+      Brain.Screen.print("Offset: %f", offsetVector.mag());
 
       turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
       float turnScalingFactor = cosf(turnError); // Only drive forward when facing the correct direction
