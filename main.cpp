@@ -1264,6 +1264,18 @@ void flexingOdom(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor
 void miniOdomTestAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
   robotDrivetrain->odom->resetOrientation();
   robotDrivetrain->driveToPoint(24, 24);
+
+  coordinate globalPosition = robotDrivetrain->odom->getGlobalPosition();
+  float xCoordinate = globalPosition.x;
+  float yCoordinate = globalPosition.y;
+  Brain.Screen.print("X coordinate: %f", xCoordinate);
+  Brain.Screen.newLine();
+  Brain.Screen.print("Y coordinate: %f", yCoordinate);
+  Brain.Screen.newLine();
+
+  while (true) {
+    robotDrivetrain->odometryStep();
+  }
 }
 
 /* --------------- Start driver control ---------------*/
