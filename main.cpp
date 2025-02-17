@@ -782,7 +782,7 @@ class Drive {
       float turnScalingFactor = cosf(turnError); // Only drive forward when facing the correct direction
       driveMotorVelocity = clampStraightVelocity(driveMotorVelocity) * turnScalingFactor;
 
-      if (drivePID.timeSettled > 0) turnMotorVelocity = 0; // Don't try to correct direction when settling in
+      if (drivePID->timeSettled > 0) turnMotorVelocity = 0; // Don't try to correct direction when settling in
       
       driveVelocity(driveMotorVelocity + turnMotorVelocity, driveMotorVelocity - turnMotorVelocity);
 
@@ -1421,7 +1421,7 @@ void templateAutonomous(void) { // Dummy wrapper function to call the desired au
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(HorizontalTrackingWheel, InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, BackWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
 
-  pointDebugAuton(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+  flexingOdom(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
