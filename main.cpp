@@ -1261,6 +1261,11 @@ void flexingOdom(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor
   robotDrivetrain->driveToPoint(0, 0);
 }
 
+void miniOdomTestAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
+  robotDrivetrain->odom->resetOrientation();
+  robotDrivetrain->driveToPoint(24, 24);
+}
+
 /* --------------- Start driver control ---------------*/
 
 void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMotor, rotation &armRotationSensor, digital_out &doinkerPneumatic, digital_out &descorerPneumatic, motor &intakeRollerMotor, digital_out &leftMoGoPneumatic, digital_out &rightMoGoPneumatic) {
@@ -1421,7 +1426,7 @@ void templateAutonomous(void) { // Dummy wrapper function to call the desired au
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(HorizontalTrackingWheel, InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, BackWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
 
-  flexingOdom(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
+  miniOdomTestAuton(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
 void templateDriverControl(void) { // Dummy wrapper function to call the desired driver control (because the competition template can't take parameters)
