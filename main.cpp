@@ -774,6 +774,9 @@ class Drive {
     PID* turnPID = new PID(atan2(offsetVector.y, offsetVector.x) - odom->getOrientation(), turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
     while (!turnPID->isSettled()) {
       coordinate offsetVector = targetPoint - odom->getGlobalPosition();
+      Brain.Screen.clearScreen();
+      Brain.Screen.setCursor(1, 1);
+      Brain.Screen.print("Offset: %f", offsetVector.mag());
       float turnError = reduceAngleNegPiToPi(atan2(offsetVector.y, offsetVector.x) - odom->getOrientation());
       float driveMotorVelocity = drivePID->calculateNextStep(offsetVector.mag());
       float turnMotorVelocity = turnPID->calculateNextStep(turnError);
