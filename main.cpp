@@ -784,7 +784,6 @@ class Drive {
       turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
       float turnScalingFactor = cosf(turnError); // Only drive forward when facing the correct direction
       driveMotorVelocity = clampStraightVelocity(driveMotorVelocity) * turnScalingFactor;
-      driveMotorVelocity = 0; // REMOVE THIS WHEN DONE
 
       if (drivePID->timeSettled > 0) turnMotorVelocity = 0; // Don't try to correct direction when settling in
       
