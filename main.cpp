@@ -622,6 +622,12 @@ class Drive {
     return headingAngle;
   }
 
+  bool isLineSettled(coordinate targetPos, float startingAngle, coordinate currentPos) { // "Inspired" by a useful settling function by Jackson Area Robotics...
+    coordinate offset = targetPos - currentPos;
+    bool passedPerpendicular = (offset.y * cosf(startingAngle) <= -offset.x * sinf(startingAngle));
+    return passedPerpendicular;
+  }
+
   float degreesToRadians(float angleDegrees) {
     return angleDegrees * M_PI / 180;
   }
@@ -772,7 +778,14 @@ class Drive {
     coordinate offsetVector = targetPoint - odom->getGlobalPosition();
     PID* drivePID = new PID(offsetVector.mag(), straightParameters.kp, straightParameters.ki, straightParameters.kd, straightParameters.integralRange, straightParameters.settleThreshold, straightParameters.settleTime);
     PID* turnPID = new PID(atan2(offsetVector.y, offsetVector.x) - odom->getOrientation(), turnParameters.kp, turnParameters.ki, turnParameters.kd, turnParameters.integralRange, turnParameters.settleThreshold, turnParameters.settleTime);
+    float startTurnAngle = atan2(offsetVector.x, offsetVector.y);
+    bool lineSettled = false;
+    bool previousLineSettled = isLineSettled(targetPoint, startTurnAngle, odom->getGlobalPosition());
     while (!drivePID->isSettled()) {
+      lineSettled = isLineSettled(targetPoint, startTurnAngle, odom->getGlobalPosition());
+      if (lineSettled && !previousLineSettled) break;
+      previousLineSettled = lineSettled;
+
       coordinate offsetVector = targetPoint - odom->getGlobalPosition();
       float turnError = reduceAngleNegPiToPi(atan2(offsetVector.x, offsetVector.y) - odom->getOrientation());
       float driveMotorVelocity = drivePID->calculateNextStep(offsetVector.mag());
