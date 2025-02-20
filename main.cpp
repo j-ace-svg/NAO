@@ -628,6 +628,15 @@ class Drive {
     return passedPerpendicular;
   }
 
+<<<<<<< Updated upstream
+=======
+  float howMuchLineSettled(coordinate targetPos, float startingAngle, coordinate currentPos) { // "Inspired" by a useful settling function by Jackson Area Robotics...
+    coordinate offset = targetPos - currentPos;
+    float distPastPerpendicular = (offset.y * cosf(startingAngle) - -offset.x * sinf(startingAngle));
+    return distPastPerpendicular;
+  }
+
+>>>>>>> Stashed changes
   float degreesToRadians(float angleDegrees) {
     return angleDegrees * M_PI / 180;
   }
@@ -783,6 +792,10 @@ class Drive {
     bool previousLineSettled = isLineSettled(targetPoint, startTurnAngle, odom->getGlobalPosition());
     while (!drivePID->isSettled()) {
       lineSettled = isLineSettled(targetPoint, startTurnAngle, odom->getGlobalPosition());
+<<<<<<< Updated upstream
+=======
+      float lineDist = howMuchLineSettled(targetPoint, startTurnAngle, odom->getGlobalPosition());
+>>>>>>> Stashed changes
       if (lineSettled && !previousLineSettled) break;
       previousLineSettled = lineSettled;
 
@@ -799,8 +812,18 @@ class Drive {
       Brain.Screen.print("Offset X: %f", offsetVector.x);
       Brain.Screen.newLine();
       Brain.Screen.print("Offset Y: %f", offsetVector.y);
+<<<<<<< Updated upstream
+=======
+      Brain.Screen.newLine();
+      Brain.Screen.print("Line settling dist: %f", lineDist);
+>>>>>>> Stashed changes
 
       turnMotorVelocity = clampTurnVelocity(turnMotorVelocity);
+
+      if (drivePID->timeSettled > 0) { // Don't try to correct direction when settling in
+        turnMotorVelocity = 0;
+        turnError = 0;
+      }
       float turnScalingFactor = cosf(turnError); // Only drive forward when facing the correct direction
       driveMotorVelocity = clampStraightVelocity(driveMotorVelocity) * turnScalingFactor;
 
@@ -862,8 +885,8 @@ float RightWheelRadius = 1.625;
 float BackWheelRadius = 1.375;
 /* kp, ki, kd, integralRange, settleThreshold, settleTime, maxVelocity */
 odomParameters StraightParameters = {5, 0, 0, 0, 0.25, 0.25, 80};
-odomParameters TurnParameters = {19.3, 0.009, 60, M_PI / 2, 0.025, 0.3, 50}; // kU = 34, pU = 1.398
-odomParameters ArcParameters = {26.2, 0.009, 40, M_PI / 2, 0.035, 0.2, 50}; // Starting with copy/paste of TurnParameters
+odomParameters TurnParameters = {21.3, 0.009, 2, M_PI / 2, 0.05, 0.1, 50}; // kU = 34, pU = 1.398
+odomParameters ArcParameters = {26.2, 0.009, 40, M_PI / 2, 0.005, 0.2, 50}; // Starting with copy/paste of TurnParameters
 odomParameters HeadingParameters = {40, 0.020, 40, M_PI / 2, 0.035, 0.2, 0};
 
 odomParameters ArmParameters = {0.014, 0, 0.001, M_PI / 6, 0, 0, 0};
@@ -1290,6 +1313,10 @@ void miniOdomTestAuton(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &ar
   coordinate globalPosition = robotDrivetrain->odom->getGlobalPosition();
   float xCoordinate = globalPosition.x;
   float yCoordinate = globalPosition.y;
+<<<<<<< Updated upstream
+=======
+  Brain.Screen.newLine();
+>>>>>>> Stashed changes
   Brain.Screen.print("X coordinate: %f", xCoordinate);
   Brain.Screen.newLine();
   Brain.Screen.print("Y coordinate: %f", yCoordinate);
@@ -1344,7 +1371,7 @@ void driverControl(Drive* robotDrivetrain, motor &intakeBeltMotor, motor &armMot
     bool y = robotDrivetrain->remoteControl->ButtonY.pressing();
     
     int armButtonCount = a + b + x + y;
-    if (armButtonCount == 1) {
+    if (armButtonCount == 1) { // Adjust lady brown target angles
       if (x && armTargetAngle != 10) {
         armTargetAngle = 10;
         armPID->accumulatedError = 0;
@@ -1456,6 +1483,10 @@ void templateAutonomous(void) { // Dummy wrapper function to call the desired au
   Drive* robotDrivetrain = new Drive(LeftDrive, RightDrive, forward, forward, InertialSensor, RemoteControl);
   robotDrivetrain->initOdom(HorizontalTrackingWheel, InertialDriftEpsilon, DistLeft, DistRight, DistBack, LeftWheelRadius, RightWheelRadius, BackWheelRadius, StraightParameters, TurnParameters, ArcParameters, HeadingParameters);
 
+<<<<<<< Updated upstream
+=======
+  // Which auton to run (Auton Select)
+>>>>>>> Stashed changes
   miniOdomTestAuton(robotDrivetrain, IntakeBeltMotor, ArmMotor, ArmRotationSensor, DoinkerPneumatic, DescorerPneumatic, IntakeRollerMotor, LeftMoGoPneumatic, RightMoGoPneumatic);
 }
 
